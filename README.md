@@ -26,4 +26,7 @@ yarn add jest @types/jest --dev
 
  yarn add --dev @babel/preset-typescript
 
+// tsconfig.json
+ "lib": ["DOM", "ES6"],   
+
 ```
