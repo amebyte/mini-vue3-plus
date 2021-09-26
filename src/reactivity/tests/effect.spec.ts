@@ -11,7 +11,7 @@ describe('effect', () => {
         user.age++
         expect(nextAge).toBe(12)
     })
-    it('', () => {
+    it('should return runner when call effect', () => {
         let foo = 10
         const runner = effect(() => {
             foo++
