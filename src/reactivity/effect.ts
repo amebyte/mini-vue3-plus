@@ -1,6 +1,7 @@
 import { extend } from "../shared"
 
 let activeEffect
+let shouldTrack
 class ReactiveEffect{
     private _fn: any
     deps = []
@@ -10,8 +11,14 @@ class ReactiveEffect{
         this._fn = fn
     }
     run() {
+        if(!this.active) {
+            return this._fn()
+        }
+        shouldTrack = true
         activeEffect = this
-        return this._fn()
+        const result = this._fn()
+        shouldTrack = false
+        return result
     }
     stop() {
         if(this.active) {
@@ -42,6 +49,7 @@ export function track(target, key) {
         dep = new Set()
         depsMap.set(key, dep)
     }
+    if(!shouldTrack) return
     // 单纯reactive触发依赖收集，不会有Effect实例
     if(activeEffect){
         dep.add(activeEffect)
