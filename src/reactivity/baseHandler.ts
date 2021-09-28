@@ -1,5 +1,9 @@
 import { track, trigger } from "./effect"
 
+const get = createGetter()
+const set = createSetter()
+const readonlyGet = createGetter(true)
+
 function createGetter(isReadonly = false) {
     return function get(target, key) {
         const res = Reflect.get(target, key)
@@ -17,13 +21,14 @@ function createSetter() {
 }
 
 export const mutableHanders = {
-    get: createGetter(),
-    set: createSetter()
+    get,
+    set
 }
 
 export const readonlyHanders = {
-    get: createGetter(true),
+    get: readonlyGet,
     set(target, key, val) {
+        console.warn('readonly数据不能被set')
         return true
     }
 }

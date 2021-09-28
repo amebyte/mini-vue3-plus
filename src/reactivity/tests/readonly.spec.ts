@@ -8,7 +8,7 @@ describe("readonly", () => {
     expect(wrapped.foo).toBe(1);
   });
 
-  it.skip("should call console.warn when set", () => {
+  it("should call console.warn when set", () => {
     console.warn = jest.fn();
     const user = readonly({
       age: 10,
