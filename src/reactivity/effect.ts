@@ -1,7 +1,11 @@
+import { extend } from "../shared"
+
 let activeEffect
 class ReactiveEffect{
     private _fn: any
     deps = []
+    active = true
+    onStop?: () => void
     constructor(fn, public scheduler?) {
         this._fn = fn
     }
@@ -10,11 +14,22 @@ class ReactiveEffect{
         return this._fn()
     }
     stop() {
-        this.deps.forEach((dep: any) => {
-            dep.delete(this)
-        })
+        if(this.active) {
+            cleanupEffect(this)
+            if(this.onStop) {
+                this.onStop()
+            }
+            this.active = false
+        }
     }
 }
+
+function cleanupEffect(effect) {
+    effect.deps.forEach(dep => {
+        dep.delete(effect)
+    })
+}
+
 const targetMap = new Map()
 export function track(target, key) {
     let depsMap = targetMap.get(target)
@@ -27,8 +42,11 @@ export function track(target, key) {
         dep = new Set()
         depsMap.set(key, dep)
     }
-    dep.add(activeEffect)
-    activeEffect.deps.push(dep)
+    // 单纯reactive触发依赖收集，不会有Effect实例
+    if(activeEffect){
+        dep.add(activeEffect)
+        activeEffect.deps.push(dep)
+    }
 }
 export function trigger(target, key) {
     const depsMap = targetMap.get(target)
@@ -45,6 +63,8 @@ export function trigger(target, key) {
 export function effect(fn, options: any = {}) {
     const scheduler = options.scheduler
     const _effect = new ReactiveEffect(fn, scheduler)
+    extend(_effect, options)
+    // _effect.onStop = options.onStop
     _effect.run()
     const runner: any = _effect.run.bind(_effect)
     runner.effect = _effect
