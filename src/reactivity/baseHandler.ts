@@ -13,7 +13,7 @@ function createGetter(isReadonly = false) {
             return isReadonly
         }
         const res = Reflect.get(target, key)
-        if(isReadonly) track(target, key)
+        if(!isReadonly) track(target, key)
         return res
     }
 }

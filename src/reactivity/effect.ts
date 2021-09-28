@@ -50,12 +50,14 @@ export function track(target, key) {
 }
 export function trigger(target, key) {
     const depsMap = targetMap.get(target)
-    const deps = depsMap.get(key)
-    for(const effect of deps){
-        if(effect.scheduler){
-            effect.scheduler()
-        } else {
-            effect.run()
+    const deps = depsMap && depsMap.get(key)
+    if(deps) {
+        for(const effect of deps){
+            if(effect.scheduler){
+                effect.scheduler()
+            } else {
+                effect.run()
+            }
         }
     }
 }
