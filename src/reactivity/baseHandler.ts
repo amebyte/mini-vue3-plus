@@ -17,7 +17,7 @@ function createSetter() {
 }
 
 export const mutableHanders = {
-    get: createSetter(),
+    get: createGetter(),
     set: createSetter()
 }
 
