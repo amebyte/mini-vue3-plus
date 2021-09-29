@@ -39,6 +39,7 @@ function cleanupEffect(effect) {
 
 const targetMap = new Map()
 export function track(target, key) {
+    if(!isTacking()) return
     let depsMap = targetMap.get(target)
     if(!depsMap) {
         depsMap = new Map()
@@ -49,13 +50,18 @@ export function track(target, key) {
         dep = new Set()
         depsMap.set(key, dep)
     }
-    if(!shouldTrack) return
+
+    if(dep.has(activeEffect)) return
+    
     // 单纯reactive触发依赖收集，不会有Effect实例
-    if(activeEffect){
-        dep.add(activeEffect)
-        activeEffect.deps.push(dep)
-    }
+    dep.add(activeEffect)
+    activeEffect.deps.push(dep)
 }
+
+function isTacking() {
+    return activeEffect && shouldTrack
+}
+
 export function trigger(target, key) {
     const depsMap = targetMap.get(target)
     const deps = depsMap && depsMap.get(key)
