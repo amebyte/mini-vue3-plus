@@ -52,19 +52,27 @@ export function track(target, key) {
     }
 
     if(dep.has(activeEffect)) return
-    
+    trackEffect(dep)
+}
+
+export function trackEffect(dep) {
     // 单纯reactive触发依赖收集，不会有Effect实例
     dep.add(activeEffect)
     activeEffect.deps.push(dep)
+
 }
 
-function isTacking() {
+export function isTacking() {
     return activeEffect && shouldTrack
 }
 
 export function trigger(target, key) {
     const depsMap = targetMap.get(target)
     const deps = depsMap && depsMap.get(key)
+    triggerEffect(deps)
+}
+
+export function triggerEffect(deps) {
     if(deps) {
         for(const effect of deps){
             if(effect.scheduler){
