@@ -1,4 +1,4 @@
-import { mutableHanders, readonlyHanders } from "./baseHandler"
+import { mutableHanders, readonlyHanders, shallowReadonlyHanders } from "./baseHandler"
 
 export const enum ReactiveFlags {
     IS_REACTIVE = '_v_isReactive',
@@ -11,6 +11,10 @@ export function reactive(raw) {
 
 export function readonly(raw) {
     return createActiveObject(raw, readonlyHanders)
+}
+
+export function shallowReadonly(raw) {
+    return createActiveObject(raw, shallowReadonlyHanders)
 }
 
 export function isReactive(value) {
