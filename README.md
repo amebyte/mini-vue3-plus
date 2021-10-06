@@ -131,5 +131,12 @@ export default {
 ```javascript
 // 将"module": "commonjs",改成"module": "esnext"
 "module": "esnext", 
+"moduleResolution": "node", 
+```
+
+添加tslib
+
+```javascript
+yarn add tslib --dev
 ```
 
