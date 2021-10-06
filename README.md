@@ -85,3 +85,51 @@ yarn add --dev @types/jest
 // tsconfig.json
  "lib": ["DOM", "ES6"],   
 ```
+
+### 使用rollup打包库
+
+安装rollup库
+
+```javascript
+yarn add rollup --dev
+```
+
+添加rollup.config.js，注意：rollup天然就支持esm
+
+```javascript
+yarn add @rollup/plugin-typescript --dev
+```
+
+```javascript
+import typescript from "@rollup/plugin-typescript"
+export default {
+    input: "./src/index.ts",
+    output: [
+        // cjs => commonjs
+        // esm
+        {
+            format: "cjs",
+            file: "lib/mini-vue.cjs.js"
+        },
+        {
+            format: "es",
+            file: "lib/mini-vue.esm.js"
+        }
+    ],
+    plugins:[typescript()]
+}
+```
+
+配置命令
+
+```javascript
+"script":{
+    "build": "rollup -c rollup.config.js"
+}
+```
+修改tsconfig.json配置文件
+```javascript
+// 将"module": "commonjs",改成"module": "esnext"
+"module": "esnext", 
+```
+
