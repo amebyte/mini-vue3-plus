@@ -1,3 +1,4 @@
+import { isObject } from "../shared"
 import { createComponentInstance, setupComponent } from "./component"
 
 export function render(vnode: any, container: any) {
@@ -5,7 +6,12 @@ export function render(vnode: any, container: any) {
 }
 
 function patch(vnode: any, container: any) {
-    processComponent(vnode, container)
+    console.log('vnode', vnode.type)
+    if(typeof vnode.type === 'string') {
+        processElement(vnode, container)
+    } else if(isObject(vnode.type)) {
+        processComponent(vnode, container)
+    }
 }
 
 function processComponent(vnode: any, container: any) {
@@ -20,5 +26,16 @@ function mountComponent(vnode: any, container) {
 function setupRenderEffect(instance:  any, container) {
     const subTree = instance.render()
     patch(subTree, container)
+}
+
+function processElement(vnode: any, container: any) {
+    mountElement(vnode, container)
+}
+
+function mountElement(vnode: any, container: any) {
+    const el = document.createElement("div")
+    el.textContent = "hi mini-vue"
+    el.setAttribute("id", "root")
+    document.body.append(el)
 }
 
