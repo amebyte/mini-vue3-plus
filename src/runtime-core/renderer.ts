@@ -33,9 +33,24 @@ function processElement(vnode: any, container: any) {
 }
 
 function mountElement(vnode: any, container: any) {
-    const el = document.createElement("div")
-    el.textContent = "hi mini-vue"
-    el.setAttribute("id", "root")
-    document.body.append(el)
+    const el = document.createElement(vnode.type)
+    const {children} = vnode
+    if(typeof children === 'string') {
+        el.textContent = children
+    } else if(Array.isArray(children)) {
+        mountChilren(vnode, el)
+    }
+    const { props } = vnode
+    for(const key in props) {
+        const val = props[key]
+        el.setAttribute(key, val)
+    }
+    container.append(el)
+}
+
+function mountChilren(vnode, container) {
+    vnode.children.forEach(v => {
+        patch(v, container)
+    })
 }
 
