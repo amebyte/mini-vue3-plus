@@ -38,7 +38,7 @@ function mountElement(vnode: any, container: any) {
     if(typeof children === 'string') {
         el.textContent = children
     } else if(Array.isArray(children)) {
-        mountChilren(vnode, el)
+        mountChildren(vnode, el)
     }
     const { props } = vnode
     for(const key in props) {
@@ -48,7 +48,7 @@ function mountElement(vnode: any, container: any) {
     container.append(el)
 }
 
-function mountChilren(vnode, container) {
+function mountChildren(vnode, container) {
     vnode.children.forEach(v => {
         patch(v, container)
     })
