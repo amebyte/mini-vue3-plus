@@ -1,3 +1,4 @@
+import { visitNode } from "typescript"
 import { isObject } from "../shared"
 import { createComponentInstance, setupComponent } from "./component"
 
@@ -20,12 +21,13 @@ function processComponent(vnode: any, container: any) {
 function mountComponent(vnode: any, container) {
     const instance = createComponentInstance(vnode)
     setupComponent(instance)
-    setupRenderEffect(instance, container)
+    setupRenderEffect(instance, vnode, container)
 }
 
-function setupRenderEffect(instance:  any, container) {
+function setupRenderEffect(instance:  any, vnode, container) {
     const subTree = instance.render
     patch(subTree, container)
+    vnode.el = subTree.el
 }
 
 function processElement(vnode: any, container: any) {
@@ -33,7 +35,7 @@ function processElement(vnode: any, container: any) {
 }
 
 function mountElement(vnode: any, container: any) {
-    const el = document.createElement(vnode.type)
+    const el = (vnode.el = document.createElement(vnode.type))
     const {children} = vnode
     if(typeof children === 'string') {
         el.textContent = children

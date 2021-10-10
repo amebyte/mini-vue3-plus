@@ -22,6 +22,9 @@ function setupStatefulComponent(instance:  any ) {
             if(key in setupState) {
                 return setupState[key]
             }
+            if(key === '$el') {
+                return instance.vnode.el
+            }
         }
     })
     const { setup } = Component
