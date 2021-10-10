@@ -24,7 +24,7 @@ function mountComponent(vnode: any, container) {
 }
 
 function setupRenderEffect(instance:  any, container) {
-    const subTree = instance.render()
+    const subTree = instance.render
     patch(subTree, container)
 }
 
