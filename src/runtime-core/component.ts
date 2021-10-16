@@ -37,6 +37,7 @@ function finishComponentSetup(instance: any) {
     const { proxy } = instance
     // if(!Component.render) {
         instance.render = Component.render.call(proxy)
+        console.log('instance.render', instance.render)
     // }
 }
 

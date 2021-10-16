@@ -29,7 +29,8 @@ function mountComponent(vnode: any, container) {
 function setupRenderEffect(instance:  any, vnode, container) {
     const subTree = instance.render
     patch(subTree, container)
-    vnode.el = subTree.el
+    // vnode.el = subTree.el
+    instance.vnode.el = subTree.el // 这样显式赋值会不会好理解一点呢
 }
 
 function processElement(vnode: any, container: any) {
