@@ -1,5 +1,5 @@
 import { h } from '../../lib/mini-vue.esm.js'
-import { Foo } from './Foo'
+import { Foo } from './Foo.js'
 window.self = null
 export const App = {
   render() {
