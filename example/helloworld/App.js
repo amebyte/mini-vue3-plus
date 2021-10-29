@@ -20,7 +20,11 @@ export const App = {
       [
         h('p', { class: 'red' }, 'hi'),
         h('span', { class: 'green' }, 'this is a ' + this.msg),
-        h(Foo, { count: 1 })
+        h(Foo, { count: 1, 
+            onAdd() {
+                console.log("onAdd")    
+            }
+        })
       ]
     )
   },
