@@ -1,4 +1,5 @@
 import { h } from '../../lib/mini-vue.esm.js'
+import { Foo } from './Foo'
 window.self = null
 export const App = {
   render() {
@@ -19,6 +20,7 @@ export const App = {
       [
         h('p', { class: 'red' }, 'hi'),
         h('span', { class: 'green' }, 'this is a ' + this.msg),
+        h(Foo, { count: 1 })
       ]
     )
   },
