@@ -21,8 +21,11 @@ export const App = {
         h('p', { class: 'red' }, 'hi'),
         h('span', { class: 'green' }, 'this is a ' + this.msg),
         h(Foo, { count: 1, 
-            onAdd() {
-                console.log("onAdd")    
+            onAdd(a, b) {
+                console.log("onAdd", a, b)    
+            },
+            onAddFoo(a, b) {
+                console.log("onAddFoo", a, b)    
             }
         })
       ]
