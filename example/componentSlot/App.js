@@ -4,18 +4,13 @@ window.self = null
 export const App = {
   render() {
     window.self = this
-    const app = h("div", {}, "App")
-    const foo = h(Foo, {}, [h("p", {}, "coboy"), h('p', {}, 'pppp')])
-    return h(
-      'div',
-      {
-
-      },
-      [
-        app,
-        foo
-      ]
+    const app = h('div', {}, 'App')
+    const foo = h(
+      Foo,
+      {},
+      { header: h('p', {}, 'header'), footer: h('p', {}, 'footer') }
     )
+    return h('div', {}, [app, foo])
   },
   setup() {
     return {

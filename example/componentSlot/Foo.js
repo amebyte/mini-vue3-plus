@@ -4,9 +4,8 @@ export const Foo = {
         return {}
     },
     render() {
-        
         const foo = h("p", {}, "foot")
         console.log('this.$slots', this.$slots)
-        return h("div", {}, [foo, renderSlots(this.$slots)])
+        return h("div", {}, [renderSlots(this.$slots, 'header'), foo, renderSlots(this.$slots, 'footer')])
     }
 }
