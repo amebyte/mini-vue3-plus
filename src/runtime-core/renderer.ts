@@ -2,6 +2,7 @@ import { visitNode } from "typescript"
 import { isObject } from "../shared"
 import { ShapeFlags } from "../shared/ShapeFlags"
 import { createComponentInstance, setupComponent } from "./component"
+import { Fragment } from "./vnode"
 
 export function render(vnode: any, container: any) {
     patch(vnode, container)
@@ -13,8 +14,8 @@ function patch(vnode: any, container: any) {
 
     // Fragment => 只渲染 children
     switch(type) {
-        case 'Fragment':
-        processFragment(vnode, container)
+        case Fragment:
+            processFragment(vnode, container)
         break;
         default:
             if(shapeFlag & ShapeFlags.ELEMENT) {
