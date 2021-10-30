@@ -4,16 +4,30 @@ window.self = null
 export const App = {
   render() {
     window.self = this
-    const app = h("div", {}, "App")
-    const foo = h(Foo)
+    // return h("div",{ id: 'root', class: ['red', 'green']}, "hi," + this.msg)
     return h(
       'div',
       {
-
+        id: 'root',
+        class: ['red', 'green'],
+        onClick() {
+          console.log('click')
+        },
+        onMousedown() {
+            console.log("mousedown")
+        }
       },
       [
-        app,
-        foo
+        h('p', { class: 'red' }, 'hi'),
+        h('span', { class: 'green' }, 'this is a ' + this.msg),
+        h(Foo, { count: 1, 
+            onAdd(a, b) {
+                console.log("onAdd", a, b)    
+            },
+            onAddFoo(a, b) {
+                console.log("onAddFoo", a, b)    
+            }
+        })
       ]
     )
   },

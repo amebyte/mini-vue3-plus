@@ -4,7 +4,9 @@ export const Foo = {
         return {}
     },
     render() {
+        
         const foo = h("p", {}, "foot")
+        console.log('this.$slots', this.$slots)
         return h("div", {}, [foo])
     }
 }
