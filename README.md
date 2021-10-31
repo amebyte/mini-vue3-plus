@@ -1,4 +1,4 @@
-# mini-vue3
+# a mini vue3.0 study by cuixiaorui
 ### setup环境-集成jest做单元测试-集成 ts
 
 #### 基础集成
