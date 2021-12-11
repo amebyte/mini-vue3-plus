@@ -6,13 +6,16 @@ import { initSlots } from "./componentSlots"
 
 let currentInstance = null
 
-export function createComponentInstance(vnode: any) {
+export function createComponentInstance(vnode: any, parent) {
+    console.log('createComponentInstance', parent)
     let component = {
         vnode,
         type: vnode.type,
         setupState: {},
         props: {},
         slots: {},
+        provides: {},
+        parent,
         emit: () => {}
     }
     component.emit = emit.bind(null, component) as any

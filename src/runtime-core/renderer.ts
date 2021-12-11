@@ -4,59 +4,59 @@ import { ShapeFlags } from "../shared/ShapeFlags"
 import { createComponentInstance, setupComponent } from "./component"
 import { Fragment, Text } from "./vnode"
 
-export function render(vnode: any, container: any) {
-    patch(vnode, container)
+export function render(vnode: any, container: any, parentComponent) {
+    patch(vnode, container, parentComponent)
 }
 
-function patch(vnode: any, container: any) {
+function patch(vnode: any, container: any, parentComponent) {
     console.log('vnode', vnode.type)
     const { type, shapeFlag } = vnode
 
     // Fragment => 只渲染 children
     switch(type) {
         case Fragment:
-            processFragment(vnode, container)
+            processFragment(vnode, container, parentComponent)
         break;
         case Text: 
             processText(vnode, container)
         break;
         default:
             if(shapeFlag & ShapeFlags.ELEMENT) {
-                processElement(vnode, container)
+                processElement(vnode, container, parentComponent)
             } else if(shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-                processComponent(vnode, container)
+                processComponent(vnode, container, parentComponent)
             }
         break;
     }
 }
 
-function processComponent(vnode: any, container: any) {
-    mountComponent(vnode, container)
+function processComponent(vnode: any, container: any, parentComponent) {
+    mountComponent(vnode, container, parentComponent)
 }
-function mountComponent(vnode: any, container) {
-    const instance = createComponentInstance(vnode)
+function mountComponent(vnode: any, container, parentComponent) {
+    const instance = createComponentInstance(vnode, parentComponent)
     setupComponent(instance)
     setupRenderEffect(instance, vnode, container)
 }
 
 function setupRenderEffect(instance:  any, vnode, container) {
     const subTree = instance.render
-    patch(subTree, container)
+    patch(subTree, container, instance)
     // vnode.el = subTree.el
     instance.vnode.el = subTree.el // 这样显式赋值会不会好理解一点呢
 }
 
-function processElement(vnode: any, container: any) {
-    mountElement(vnode, container)
+function processElement(vnode: any, container: any, parentComponent) {
+    mountElement(vnode, container, parentComponent)
 }
 
-function mountElement(vnode: any, container: any) {
+function mountElement(vnode: any, container: any, parentComponent) {
     const el = (vnode.el = document.createElement(vnode.type))
     const {children, shapeFlag} = vnode
     if(shapeFlag & ShapeFlags.TEXT_CHILDREN) {
         el.textContent = children
     } else if(shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-        mountChildren(vnode, el)
+        mountChildren(vnode, el, parentComponent)
     }
     const { props } = vnode
     for(const key in props) {
@@ -72,14 +72,14 @@ function mountElement(vnode: any, container: any) {
     container.append(el)
 }
 
-function mountChildren(vnode, container) {
+function mountChildren(vnode, container, parentComponent) {
     vnode.children.forEach(v => {
-        patch(v, container)
+        patch(v, container, parentComponent)
     })
 }
 
-function processFragment(vnode: any, container: any) {
-    mountChildren(vnode, container)
+function processFragment(vnode: any, container: any, parentComponent) {
+    mountChildren(vnode, container, parentComponent)
 }
 
 function processText(vnode: any, container: any) {
