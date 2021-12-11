@@ -4,7 +4,10 @@ import { ShapeFlags } from "../shared/ShapeFlags"
 import { createComponentInstance, setupComponent } from "./component"
 import { Fragment, Text } from "./vnode"
 
-export function render(vnode: any, container: any, parentComponent) {
+export function createRenderer(options) {
+    const { createElement, patchProp, insert } = options
+
+function render(vnode: any, container: any, parentComponent) {
     patch(vnode, container, parentComponent)
 }
 
@@ -51,7 +54,7 @@ function processElement(vnode: any, container: any, parentComponent) {
 }
 
 function mountElement(vnode: any, container: any, parentComponent) {
-    const el = (vnode.el = document.createElement(vnode.type))
+    const el = (vnode.el = createElement(vnode.type))
     const {children, shapeFlag} = vnode
     if(shapeFlag & ShapeFlags.TEXT_CHILDREN) {
         el.textContent = children
@@ -61,15 +64,17 @@ function mountElement(vnode: any, container: any, parentComponent) {
     const { props } = vnode
     for(const key in props) {
         const val = props[key]
-        const isOn = (key: string) => /^on[A-Z]/.test(key) 
-        if(isOn(key)) {
-            const event = key.slice(2).toLowerCase()
-            el.addEventListener(event, val)
-        } else {
-            el.setAttribute(key, val)
-        }
+        // const isOn = (key: string) => /^on[A-Z]/.test(key) 
+        // if(isOn(key)) {
+        //     const event = key.slice(2).toLowerCase()
+        //     el.addEventListener(event, val)
+        // } else {
+        //     el.setAttribute(key, val)
+        // }
+        patchProp(el, key, val)
     }
-    container.append(el)
+    // container.append(el)
+    insert(el, container)
 }
 
 function mountChildren(vnode, container, parentComponent) {
@@ -87,4 +92,4 @@ function processText(vnode: any, container: any) {
     const textNode = (vnode.el = document.createTextNode(children))
     container.append(textNode)
 }
-
+}
