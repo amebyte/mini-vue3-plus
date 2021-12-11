@@ -18,8 +18,14 @@ function insert(el, parent) {
     parent.append(el)
 }
 
-const renderer = createRenderer({
+const renderer: any = createRenderer({
     createElement,
     patchProp,
     insert
 })
+
+export function createApp(...args) {
+    return renderer.createApp(...args)
+}
+
+export * from "../runtime-core"

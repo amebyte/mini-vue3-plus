@@ -1,7 +1,7 @@
-import { visitNode } from "typescript"
 import { isObject } from "../shared"
 import { ShapeFlags } from "../shared/ShapeFlags"
 import { createComponentInstance, setupComponent } from "./component"
+import { createAppAPI } from "./createApp"
 import { Fragment, Text } from "./vnode"
 
 export function createRenderer(options) {
@@ -84,5 +84,8 @@ function processText(vnode: any, container: any) {
     const { children } = vnode
     const textNode = (vnode.el = document.createTextNode(children))
     container.append(textNode)
+}
+return {
+    createApp: createAppAPI(render)
 }
 }
