@@ -30,13 +30,15 @@ const Consumer = {
     setup() {
         const foo = inject("foo")
         const bar = inject("bar")
+        const barz = inject("barz", () => "barzDefault")
         return {
             foo,
-            bar
+            bar,
+            barz
         }
     },
     render() {
-        return h("div", {}, `Consumer: -${this.foo} - ${this.bar}`)
+        return h("div", {}, `Consumer: -${this.foo} - ${this.bar} - ${this.barz}`)
     }
 }
 
