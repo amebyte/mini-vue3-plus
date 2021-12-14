@@ -1,3 +1,4 @@
+import { effect } from "../reactivity/effect"
 import { isObject } from "../shared"
 import { ShapeFlags } from "../shared/ShapeFlags"
 import { createComponentInstance, setupComponent } from "./component"
@@ -43,10 +44,13 @@ function mountComponent(vnode: any, container, parentComponent) {
 }
 
 function setupRenderEffect(instance:  any, vnode, container) {
-    const subTree = instance.render
-    patch(subTree, container, instance)
-    // vnode.el = subTree.el
-    instance.vnode.el = subTree.el // 这样显式赋值会不会好理解一点呢
+    effect(() => {
+        const { proxy } = instance
+        const subTree = instance.render.call(proxy)
+        patch(subTree, container, instance)
+        // vnode.el = subTree.el
+        instance.vnode.el = subTree.el // 这样显式赋值会不会好理解一点呢
+    })
 }
 
 function processElement(vnode: any, container: any, parentComponent) {

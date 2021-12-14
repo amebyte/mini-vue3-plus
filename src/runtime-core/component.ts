@@ -53,10 +53,10 @@ function handleSetupResult(instance, setupResult: any) {
 
 function finishComponentSetup(instance: any) {
     const Component = instance.type
-    const { proxy } = instance
+    // const { proxy } = instance
     // if(!Component.render) {
-        instance.render = Component.render.call(proxy)
-        console.log('instance.render', instance.render)
+        instance.render = Component.render
+        // console.log('instance.render', instance.render)
     // }
 }
 
