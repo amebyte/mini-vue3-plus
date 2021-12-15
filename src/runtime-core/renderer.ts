@@ -63,7 +63,15 @@ function setupRenderEffect(instance:  any, vnode, container) {
 }
 
 function processElement(n1, n2, container: any, parentComponent) {
-    mountElement(n2, container, parentComponent)
+    if(!n1) {
+        mountElement(n2, container, parentComponent)
+    } else {
+        patchElement(n1, n2, container)
+    }
+}
+
+function patchElement(n1, n2, container) {
+    console.log('patchElement')
 }
 
 function mountElement(vnode: any, container: any, parentComponent) {
