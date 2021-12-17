@@ -87,13 +87,15 @@ export function createRenderer(options) {
 
   function patchChildren(n1, n2, container) {
     const prevShapeFlag = n1.shapeFlag 
+    const c1 = n1.children
     const { shapeFlag } = n2
     const c2 = n2.children
     if(shapeFlag & ShapeFlags.TEXT_CHILDREN) {
         if(prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
             // 1. 把老的 children 清空
             unmountChildren(n1.children)
-            // 2. 设置 text
+        }
+        if(c1 !== c2) {
             hostSetElementText(container, c2)
         }
     }
