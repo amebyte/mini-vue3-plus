@@ -87,7 +87,7 @@ export function createRenderer(options) {
 
   function patchChildren(n1, n2, container) {
     const prevShapeFlag = n1.shapeFlag 
-    const { shapeFlag } = n2.shapeFlag 
+    const { shapeFlag } = n2
     const c2 = n2.children
     if(shapeFlag & ShapeFlags.TEXT_CHILDREN) {
         if(prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
