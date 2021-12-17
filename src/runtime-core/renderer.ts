@@ -72,20 +72,20 @@ export function createRenderer(options) {
     if (!n1) {
       mountElement(n2, container, parentComponent)
     } else {
-      patchElement(n1, n2, container)
+      patchElement(n1, n2, container, parentComponent)
     }
   }
 
-  function patchElement(n1, n2, container) {
+  function patchElement(n1, n2, container, parentComponent) {
     console.log('patchElement')
     const oldProps = n1.props || {}
     const newProps = n2.props || {}
     const el = (n2.el = n1.el)
-    patchChildren(n1, n2, el)
+    patchChildren(n1, n2, el, parentComponent)
     patchProps(el, oldProps, newProps)
   }
 
-  function patchChildren(n1, n2, container) {
+  function patchChildren(n1, n2, container, parentComponent) {
     const prevShapeFlag = n1.shapeFlag 
     const c1 = n1.children
     const { shapeFlag } = n2
@@ -97,6 +97,11 @@ export function createRenderer(options) {
         }
         if(c1 !== c2) {
             hostSetElementText(container, c2)
+        }
+    } else {
+        if(prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            hostSetElementText(container, "")
+            mountChildren(c2, container, parentComponent)
         }
     }
   }
@@ -133,7 +138,7 @@ export function createRenderer(options) {
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
       el.textContent = children
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-      mountChildren(vnode, el, parentComponent)
+      mountChildren(vnode.children, el, parentComponent)
     }
     const { props } = vnode
     for (const key in props) {
@@ -144,14 +149,14 @@ export function createRenderer(options) {
     hostInsert(el, container)
   }
 
-  function mountChildren(vnode, container, parentComponent) {
-    vnode.children.forEach((v) => {
+  function mountChildren(children, container, parentComponent) {
+    children.forEach((v) => {
       patch(null, v, container, parentComponent)
     })
   }
 
   function processFragment(n1, n2, container: any, parentComponent) {
-    mountChildren(n2, container, parentComponent)
+    mountChildren(n2.children, container, parentComponent)
   }
 
   function processText(n1, n2, container: any) {
