@@ -1,3 +1,4 @@
+import { effect } from '../effect';
 import { reactive, isReactive, isProxy } from '../reactive';
 describe('reactive', () => {
     it('happy path', () => {
@@ -20,4 +21,17 @@ describe('reactive', () => {
         expect(isReactive(observed.array)).toBe(true);
         expect(isReactive(observed.array[0])).toBe(true);
     });
+    it("test", () => {
+        const obj = reactive({
+          a: {
+            b: "b",
+          },
+        });
+    
+        effect(() => {
+          console.log(obj.a);
+        });
+    
+        obj.a = { b: "bb" };
+      });
 })
