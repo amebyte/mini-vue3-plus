@@ -110,9 +110,10 @@ export function createRenderer(options) {
   }
 
   function patchKeyedChildren(c1, c2, container, parentComponent, parentAnchor) {
+    const l2 = c2.length
     let i = 0
     let e1 = c1.length - 1
-    let e2 = c2.length - 1
+    let e2 = l2 - 1
 
     function isSomeVNodeType(n1, n2) {
         return n1.type === n2.type && n1.key === n2.key
@@ -147,9 +148,13 @@ export function createRenderer(options) {
     // 新的比老的多，创建
     if(i > e1) {
         if(i <= e2) {
+            // debugger
             const nextPos = i + 1
-            const anchor = nextPos > c2.length ? null : c2[nextPos].el
-            patch(null, c2[i], container, parentComponent, anchor)
+            const anchor = nextPos < l2 ? c2[nextPos].el : null
+            while(i <= e2) {
+                patch(null, c2[i], container, parentComponent, anchor)
+                i++
+            }
         }
     }
 
