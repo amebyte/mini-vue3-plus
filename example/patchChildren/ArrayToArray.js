@@ -93,15 +93,37 @@ import { ref, h } from "../../lib/mini-vue.esm.js";
 // D 节点在新的里面是没有的 - 需要删除掉
 // C 节点 props 也发生了变化
 
-const prevChildren = [
-  h("p", { key: "A" }, "A"),
-  h("p", { key: "B" }, "B"),
-  h("p", { key: "C", id: "c-prev" }, "C"),
-  h("p", { key: "D" }, "D"),
-  h("p", { key: "F" }, "F"),
-  h("p", { key: "G" }, "G"),
-];
+// const prevChildren = [
+//   h("p", { key: "A" }, "A"),
+//   h("p", { key: "B" }, "B"),
+//   h("p", { key: "C", id: "c-prev" }, "C"),
+//   h("p", { key: "D" }, "D"),
+//   h("p", { key: "F" }, "F"),
+//   h("p", { key: "G" }, "G"),
+// ];
 
+// const nextChildren = [
+//   h("p", { key: "A" }, "A"),
+//   h("p", { key: "B" }, "B"),
+//   h("p", { key: "E" }, "E"),
+//   h("p", { key: "C", id:"c-next" }, "C"),
+//   h("p", { key: "F" }, "F"),
+//   h("p", { key: "G" }, "G"),
+// ];
+
+// 5.1.1
+// a,b,(c,e,d),f,g
+// a,b,(e,c),f,g
+// 中间部分，老的比新的多， 那么多出来的直接就可以被干掉(优化删除逻辑)
+const prevChildren = [
+    h("p", { key: "A" }, "A"),
+    h("p", { key: "B" }, "B"),
+    h("p", { key: "C", id: "c-prev" }, "C"),
+    h("p", { key: "E" }, "E"),
+    h("p", { key: "D" }, "D"),
+    h("p", { key: "F" }, "F"),
+    h("p", { key: "G" }, "G"),
+  ];
 const nextChildren = [
   h("p", { key: "A" }, "A"),
   h("p", { key: "B" }, "B"),
