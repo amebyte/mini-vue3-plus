@@ -168,8 +168,9 @@ export function createRenderer(options) {
 
         let toBePatched = e2 - s2 + 1
         let patched = 0
-
         const keyToNewIndexMap = new Map()
+        const newIndexToOldIndexMap = new Array(toBePatched)
+        for(let i = 0; i < toBePatched; i++) newIndexToOldIndexMap[i] = 0
 
         for(let i = s2; i <= e2; i++) {
             const nextChild = c2[i]
