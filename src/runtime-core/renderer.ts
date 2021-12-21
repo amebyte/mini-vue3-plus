@@ -86,149 +86,206 @@ export function createRenderer(options) {
   }
 
   function patchChildren(n1, n2, container, parentComponent, anchor) {
-    const prevShapeFlag = n1.shapeFlag 
+    const prevShapeFlag = n1.shapeFlag
     const c1 = n1.children
     const { shapeFlag } = n2
     const c2 = n2.children
-    if(shapeFlag & ShapeFlags.TEXT_CHILDREN) {
-        if(prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-            // 1. 把老的 children 清空
-            unmountChildren(n1.children)
-        }
-        if(c1 !== c2) {
-            hostSetElementText(container, c2)
-        }
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 1. 把老的 children 清空
+        unmountChildren(n1.children)
+      }
+      if (c1 !== c2) {
+        hostSetElementText(container, c2)
+      }
     } else {
-        if(prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
-            hostSetElementText(container, "")
-            mountChildren(c2, container, parentComponent, anchor)
-        } else {
-            // array diff array
-            patchKeyedChildren(c1, c2, container, parentComponent, anchor)
-        }
+      if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+        hostSetElementText(container, '')
+        mountChildren(c2, container, parentComponent, anchor)
+      } else {
+        // array diff array
+        patchKeyedChildren(c1, c2, container, parentComponent, anchor)
+      }
     }
   }
 
-  function patchKeyedChildren(c1, c2, container, parentComponent, parentAnchor) {
+  function patchKeyedChildren(
+    c1,
+    c2,
+    container,
+    parentComponent,
+    parentAnchor
+  ) {
     const l2 = c2.length
     let i = 0
     let e1 = c1.length - 1
     let e2 = l2 - 1
 
     function isSomeVNodeType(n1, n2) {
-        return n1.type === n2.type && n1.key === n2.key
+      return n1.type === n2.type && n1.key === n2.key
     }
 
     // 左侧
-    while(i <= e1 && i <= e2) {
-        const n1 = c1[i]
-        const n2 = c2[i]
+    while (i <= e1 && i <= e2) {
+      const n1 = c1[i]
+      const n2 = c2[i]
 
-        if(isSomeVNodeType(n1, n2)) {
-            patch(n1, n2, container, parentComponent, parentAnchor)
-        } else {
-            break
-        }
-        i++
+      if (isSomeVNodeType(n1, n2)) {
+        patch(n1, n2, container, parentComponent, parentAnchor)
+      } else {
+        break
+      }
+      i++
     }
 
     // 右侧
-    while(i <= e1 && i <= e2) {
-        const n1 = c1[e1]
-        const n2 = c2[e2]
-        if(isSomeVNodeType(n1, n2)) {
-            patch(n1, n2, container, parentComponent, parentAnchor)
-        } else {
-            break
-        }
-        e1--
-        e2--
+    while (i <= e1 && i <= e2) {
+      const n1 = c1[e1]
+      const n2 = c2[e2]
+      if (isSomeVNodeType(n1, n2)) {
+        patch(n1, n2, container, parentComponent, parentAnchor)
+      } else {
+        break
+      }
+      e1--
+      e2--
     }
-    
+
     // 新的比老的多，创建
-    if(i > e1) {
-        if(i <= e2) {
-            // debugger
-            const nextPos = i + 1
-            const anchor = nextPos < l2 ? c2[nextPos].el : null
-            while(i <= e2) {
-                patch(null, c2[i], container, parentComponent, anchor)
-                i++
-            }
+    if (i > e1) {
+      if (i <= e2) {
+        // debugger
+        const nextPos = i + 1
+        const anchor = nextPos < l2 ? c2[nextPos].el : null
+        while (i <= e2) {
+          patch(null, c2[i], container, parentComponent, anchor)
+          i++
         }
-    } else if(i > e2) {
-        while(i <= e1) {
-            hostRemove(c1[i].el)
-            i++
-        }
+      }
+    } else if (i > e2) {
+      while (i <= e1) {
+        hostRemove(c1[i].el)
+        i++
+      }
     } else {
-        // 中间对比
-        let s1 = i
-        let s2 = i
+      // 中间对比
+      let s1 = i
+      let s2 = i
 
-        let toBePatched = e2 - s2 + 1
-        let patched = 0
-        const keyToNewIndexMap = new Map()
-        const newIndexToOldIndexMap = new Array(toBePatched)
-        for(let i = 0; i < toBePatched; i++) newIndexToOldIndexMap[i] = 0
+      let toBePatched = e2 - s2 + 1
+      let patched = 0
+      const keyToNewIndexMap = new Map()
+      const newIndexToOldIndexMap = new Array(toBePatched)
+      for (let i = 0; i < toBePatched; i++) newIndexToOldIndexMap[i] = 0
 
-        for(let i = s2; i <= e2; i++) {
-            const nextChild = c2[i]
-            keyToNewIndexMap.set(nextChild.key, i)
+      for (let i = s2; i <= e2; i++) {
+        const nextChild = c2[i]
+        keyToNewIndexMap.set(nextChild.key, i)
+      }
+
+      for (let i = s1; i <= e1; i++) {
+        const prevChild = c1[i]
+        if (patched >= toBePatched) {
+          hostRemove(prevChild.el)
+          continue
+        }
+        let newIndex
+        if (prevChild.key !== null) {
+          newIndex = keyToNewIndexMap.get(prevChild.key)
+        } else {
+          for (let j = s2; j < e2; j++) {
+            if (isSomeVNodeType(prevChild, c2[j])) {
+              newIndex = j
+              break
+            }
+          }
         }
 
-        for (let i = s1; i <= e1; i++) {
-            const prevChild = c1[i]
-            if(patched >= toBePatched) {
-                hostRemove(prevChild.el)
-                continue
-            }
-            let newIndex
-            if(prevChild.key !== null) {
-                newIndex = keyToNewIndexMap.get(prevChild.key)
-            } else {
-                for (let j = s2; j < e2; j++) {
-                    if(isSomeVNodeType(prevChild, c2[j])) {
-                        newIndex = j
-                        break
-                    }
-                }
-            }
-
-            if(newIndex === undefined) {
-                hostRemove(prevChild.el)
-            } else {
-                patch(prevChild, c2[newIndex], container, parentComponent, null)
-                patched++
-            }
+        if (newIndex === undefined) {
+          hostRemove(prevChild.el)
+        } else {
+          newIndexToOldIndexMap[newIndex - s2] = i + 1
+          patch(prevChild, c2[newIndex], container, parentComponent, null)
+          patched++
         }
+      }
+      const increasingNewIndexSequence = getSequence(newIndexToOldIndexMap)
+      let j = 0
+      for(let i = 0; i < toBePatched; i++) {
+        if(i !== increasingNewIndexSequence[j]) {
+            console.log('移动位置')
+        } else {
+            j++
+        }
+      }
     }
   }
 
+  function getSequence(arr) {
+    const p = arr.slice()
+    const result = [0]
+    let i, j, u, v, c
+    const len = arr.length
+    for (i = 0; i < len; i++) {
+      const arrI = arr[i]
+      if (arrI !== 0) {
+        j = result[result.length - 1]
+        if (arr[j] < arrI) {
+          p[i] = j
+          result.push(i)
+          continue
+        }
+        u = 0
+        v = result.length - 1
+        while (u < v) {
+          c = (u + v) >> 1
+          if (arr[result[c]] < arrI) {
+            u = c + 1
+          } else {
+            v = c
+          }
+        }
+        if (arrI < arr[result[u]]) {
+          if (u > 0) {
+            p[i] = result[u - 1]
+          }
+          result[u] = i
+        }
+      }
+    }
+    u = result.length
+    v = result[u - 1]
+    while (u-- > 0) {
+      result[u] = v
+      v = p[v]
+    }
+    return result
+  }
+
   function unmountChildren(children) {
-    for(let i = 0; i < children.length; i++) {
-        const el = children[i].el
-        hostRemove(el)
+    for (let i = 0; i < children.length; i++) {
+      const el = children[i].el
+      hostRemove(el)
     }
   }
 
   function patchProps(el, oldProps, newProps) {
-      if(oldProps !== newProps) {
-        for (const key in newProps) {
-            const prevProp = oldProps[key]
-            const nextProp = newProps[key]
-            if (prevProp !== nextProp) {
-              hostPatchProp(el, key, prevProp, nextProp)
-            }
-          }
-          if(oldProps !== {}) {
-            for (const key in oldProps) {
-                if(!(key in newProps)) {
-                    hostPatchProp(el, key, oldProps[key], null)
-                }
-            }
-          }
+    if (oldProps !== newProps) {
+      for (const key in newProps) {
+        const prevProp = oldProps[key]
+        const nextProp = newProps[key]
+        if (prevProp !== nextProp) {
+          hostPatchProp(el, key, prevProp, nextProp)
+        }
       }
+      if (oldProps !== {}) {
+        for (const key in oldProps) {
+          if (!(key in newProps)) {
+            hostPatchProp(el, key, oldProps[key], null)
+          }
+        }
+      }
+    }
   }
 
   function mountElement(vnode: any, container: any, parentComponent, anchor) {
