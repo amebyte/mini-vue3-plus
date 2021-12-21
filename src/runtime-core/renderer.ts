@@ -210,12 +210,16 @@ export function createRenderer(options) {
         }
       }
       const increasingNewIndexSequence = getSequence(newIndexToOldIndexMap)
-      let j = 0
-      for(let i = 0; i < toBePatched; i++) {
+      let j = increasingNewIndexSequence.length - 1
+      for(let i = toBePatched - 1; i >= 0; i--) {
+          const nextIndex = i + s2
+          const nextChild = c2[nextIndex]
+          const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null
         if(i !== increasingNewIndexSequence[j]) {
             console.log('移动位置')
+            hostInsert(nextChild.el, container, anchor)
         } else {
-            j++
+            j--
         }
       }
     }
