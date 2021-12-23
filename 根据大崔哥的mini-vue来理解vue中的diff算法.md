@@ -125,3 +125,63 @@ exports.vueDiff = (c1, c2, { mountElement, patch, unmount, move }) => {
 
  ![](./md/01.png)
 
+通过上面的操作我们就把左侧的`i`的值给确认好了，以及左侧相同的元素也进行了递归patch处理了，接下来我们实现右侧的部分
+
+```javascript
+const prevVNode = [{ key: "a" }, { key: "b" }, { key: "c" }]
+const nextVNode = [{ key: "d" }, { key: "e" }, { key: "b" }, { key: "c" }]
+```
+
+从上面两组新老元素可以看出，一开始从左边开始对比的时候，`a`和`d`就不相同，就退出循环了，这样指针`i`就定在0，接下来就会去看右侧，右侧也是需要一一进行对比的，就会发现右侧一开始的`c`和`c`是相同的，所以指针`e1`和`e2`就往左移动，然后发现`b`和`b`还是相同，继续往左移动，这个时候就发现`a`和`e`是不相同的，然后就退出循环，指针停止移动，循环条件依然是`i`不能大于`e1`并且也不能大于`e2`
+
+从右边往左边查找，如果节点可以复用，则继续往左，不能就停止循环 
+
+```javascript
+// *2. 从右边往左边查找，如果节点可以复用，则继续往左，不能就停止循环
+while(i <= e1 && i <= e2) {
+    // 取出新老元素
+    const n1 = c1[e1]
+    const n2 = c2[e2]
+    // 对比是否一样
+    if(isSameVnodeType(n1, n2)) {
+        // 一样就递归调用
+        patch(n1.key)
+    } else {
+        // 如果不一样就退出循环
+        break
+    }
+    // 指针移动
+    e1--
+    e2--
+}
+```
+
+右侧测试用例
+
+```javascript
+it('2. 右边边查找', () => {
+    const mountElement = jest.fn()
+    const patch = jest.fn()
+    const unmount = jest.fn()
+    const move = jest.fn()
+    const { vueDiff } = require('../vue-diff')
+    vueDiff(
+        [{ key: 'a' }, { key: 'b' }, { key: 'c' }],
+        [{ key: 'd' }, { key: 'e' }, { key: 'b' }, { key: 'c' }],
+        {
+            mountElement,
+            patch,
+            unmount,
+            move
+        }
+    )
+    expect(patch.mock.calls.length).toBe(2)
+    expect(patch.mock.calls[0][0]).toBe('c')
+    expect(patch.mock.calls[1][0]).toBe('b')
+})
+```
+
+执行测试用例
+
+ ![](./md/02.png)
+
