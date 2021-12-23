@@ -64,5 +64,64 @@ const nextVNode = [{ key: "a" }, { key: "b" }, { key: "d" }, { key: "e" }]
 - 指针`i`为从左侧开始新老`VNode`元素不相等时的索引值，一开始`i`为0，只要新老元素相等i就往后移，也就是`i++`，然后再去匹配下一对新老元素是否相等，一样的话继续往后走，即继续`i++`，直到新老元素不一样的时候`i`就固定下来了。比如上面的`prevVNode`和`nextVNode`不相等的元素是从`c、d`开始，`c、d`的索引值都是2
 - 循环条件是`i`不能大于`e1`并且也不能大于`e2`，很明显大于的话就超出索引了，获取不到元素了
 
+代码模拟
 
+从左边往右查找，如果节点可以复用，则继续往右，不能就停止循环
+
+```javascript
+exports.vueDiff = (c1, c2, { mountElement, patch, unmount, move }) => {
+    function isSameVnodeType(n1, n2) {
+        return n1.key === n2.key; //&& n1.type === n2.type;
+    }
+    let i = 0
+    let e1 = c1.length - 1
+    let e2 = c2.length - 1
+    // *1. 从左边往右查找，如果节点可以复用，则继续往右，不能就停止循环
+    while(i <= e1 && i <= e2) { // 通过上面分析我们可以知道循环条件
+        // 取出新老元素
+        const n1 = c1[i]
+        const n2 = c2[i]
+        // 对比是否一样
+        if(isSameVnodeType(n1, n2)) {
+            // 一样就递归调用
+            patch(n1.key)
+        } else {
+            // 如果不一样就退出循环
+            break
+        }
+        i ++ // 指针往后移动
+    }
+}
+```
+
+左边查找的测试用例
+
+```javascript
+  it('1. 左边查找', () => {
+    const mountElement = jest.fn()
+    const patch = jest.fn()
+    const unmount = jest.fn()
+    const move = jest.fn()
+    const { vueDiff } = require('../vue-diff')
+    vueDiff(
+      [{ key: 'a' }, { key: 'b' }, { key: 'c' }],
+      [{ key: 'a' }, { key: 'b' }, { key: 'd' }, { key: 'e' }],
+      {
+        mountElement,
+        patch,
+        unmount,
+        move
+      }
+    )
+    // 第一次调用次数
+    expect(patch.mock.calls.length).toBe(2)
+    // 第一次调用的第一个参数
+    expect(patch.mock.calls[0][0]).toBe('a')
+    expect(patch.mock.calls[1][0]).toBe('b')
+  })
+```
+
+执行测试
+
+ ![](./md/01.png)
 
