@@ -185,3 +185,56 @@ it('2. 右边边查找', () => {
 
  ![](./md/02.png)
 
+老节点没了，新节点还有 
+
+```javascript
+const prevVNode = [{ key: "a" }, { key: "b" }]
+const nextVNode = [{ key: "a" }, { key: "b" }, { key: "c" }]
+```
+
+首先还是从左侧开始对比，`a`和`a`对比，`b`和`b`对比，走到`c`的时候，指针`i`停下来了，这个时候`i=2`；指针`e1=1`；指针`e2=2` ;这个时候乱序的范围就是`i`大于`e1`小于等于`e2`
+
+```javascript
+// *3. 老节点没了，新节点还有
+if(i > e1) {
+    if(i <= e2) {
+        // 新节点可能存在多个，所以需要循环
+        while (i <= e2) {
+            const n2 = c2[i];
+            mountElement(n2.key);
+            i++;
+        }
+    }
+}
+```
+
+测试用例
+
+```javascript
+it("3. 老节点没了，新节点还有", () => {
+    const mountElement = jest.fn();
+    const patch = jest.fn();
+    const unmount = jest.fn();
+    const move = jest.fn();
+    const { vueDiff } = require("../vue-diff");
+    vueDiff(
+        [{ key: "a" }, { key: "b" }],
+        [{ key: "a" }, { key: "b" }, { key: "c" }],
+        {
+            mountElement,
+            patch,
+            unmount,
+            move,
+        }
+    );
+    expect(patch.mock.calls.length).toBe(2);
+    expect(patch.mock.calls[0][0]).toBe("a");
+    expect(patch.mock.calls[1][0]).toBe("b");
+    expect(mountElement.mock.calls[0][0]).toBe("c");
+});
+```
+
+执行测试用例
+
+ ![](./md/03.png)
+
