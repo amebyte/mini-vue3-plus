@@ -208,6 +208,22 @@ if(i > e1) {
 }
 ```
 
+需要注意的是，vue这里插入元素使用的是 `inserBefore` 这个DOM API
+
+##### 参数
+
+- `newNode`：将要插入的节点
+- `referenceNode`：被参照的节点（即要插在该节点之前）
+
+所以我们需要计算`被参照的节点`
+
+```javascript
+const nextPos = i + 1
+const anchor = nextPos < l2 ? c2[nextPos].el : null
+```
+
+
+
 测试用例
 
 ```javascript
@@ -237,4 +253,13 @@ it("3. 老节点没了，新节点还有", () => {
 执行测试用例
 
  ![](./md/03.png)
+
+老节点还有，新节点没了 
+
+```javascript
+const prevVNode = [{ key: "a" }, { key: "b" }, { key: "c" }]
+const nextVNode = [{ key: "a" }, { key: "b" }]
+```
+
+首先还是从左侧开始对比，`a`和`a`对比，`b`和`b`对比，走到`c`的时候，指针`i`停下来了，这个时候`i=2`；指针`e1=2`；指针`e2=1` ;这个时候当这个`i`大于`e2`的时候，就会多出节点，就要删除。
 
