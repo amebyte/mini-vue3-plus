@@ -263,3 +263,45 @@ const nextVNode = [{ key: "a" }, { key: "b" }]
 
 首先还是从左侧开始对比，`a`和`a`对比，`b`和`b`对比，走到`c`的时候，指针`i`停下来了，这个时候`i=2`；指针`e1=2`；指针`e2=1` ;这个时候当这个`i`大于`e2`的时候，就会多出节点，就要删除。
 
+```javascript
+ else if(i > e2) {
+     while(i <= e1) {
+         const n1 = c1[i];
+         unmount(n1.key);
+         i++;
+     }
+ }
+```
+
+测试用例
+
+```javascript
+it("4. 老节点还有，新节点没了", () => {
+    const mountElement = jest.fn();
+    const patch = jest.fn();
+    const unmount = jest.fn();
+    const move = jest.fn();
+    const { vueDiff } = require("../vue-diff");
+    vueDiff(
+        [{ key: "a" }, { key: "b" }, { key: "c" }],
+        [{ key: "a" }, { key: "b" }],
+        {
+            mountElement,
+            patch,
+            unmount,
+            move,
+        }
+    );
+    // 第一次调用次数
+    expect(patch.mock.calls.length).toBe(2);
+    // 第一次调用的第一个参数
+    expect(patch.mock.calls[0][0]).toBe("a");
+    expect(patch.mock.calls[1][0]).toBe("b");
+    expect(unmount.mock.calls[0][0]).toBe("c");
+});
+```
+
+执行测试用例
+
+ ![](./md/04.png)
+
