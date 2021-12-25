@@ -433,3 +433,152 @@ for(let i = s1; i <= e1; i++) {
 其实可以进行暴力计算，就是将所有元素进行重新排序移动，但这样性能会造成很大的浪费，如上图其实只需要把节点`K`移动一次就可以了。
 
 那怎么知道只要把节点K移动一次就可以了呢？可以通过一个`最长递增子序列`的算法就可以求出上面的`E`、`F`、`Y`、`J` 是不需要移动的节点。
+
+```javascript
+// 中间对比
+let s1 = i // 老节点的开始
+let s2 = i // 新节点的开始
+
+// 记录当前中间节点的总数量
+const toBePactched = e2 - s2 + 1
+// 记录当前处理的数量
+let patched = 0
+
+// 新节点的映射表
+const keyToNewIndexMap = new Map()
+
+const newIndexToOldIndexMap = new Array(toBePactched) // 创建一个定长数组，定长的数组性能是最好的
+// 是否需要移动
+let moved = false
+let maxNewIndexSoFar = 0
+for (let i = 0; i < toBePactched; i++) newIndexToOldIndexMap[i] = 0
+
+for (let i = s2; i <= e2; i++) {
+    const nextChild = c2[i]
+    keyToNewIndexMap.set(nextChild.key, i)
+}
+
+// 遍历老节点里面的key
+for (let i = s1; i <= e1; i++) {
+    const prevChild = c1[i]
+    // 如果当前处理的数量已经大于当前节点总数，那么旧节点直接删除就可以了
+    if (patched >= toBePactched) {
+        unmount(prevChild.key)
+        continue
+    }
+
+    let newIndex
+    if (prevChild.key !== null || prevChild.key !== undefined) {
+        // 如果用户设置了key那么就去映射表里面查询
+        newIndex = keyToNewIndexMap.get(prevChild.key)
+    } else {
+        // 如果用户没有设置key，那么就遍历所有，时间复杂度为O(n)
+        for (let j = s2; j < e2; j++) {
+            if (isSameVnodeType(prevChild, c2[j])) {
+                newIndex = j
+                break
+            }
+        }
+    }
+    // 如果在新的节点里面没有找到
+    if (newIndex === undefined) {
+        // 没有找到就删除
+        unmount(prevChild.key)
+    } else {
+
+        if(newIndex >= maxNewIndexSoFar) {
+            maxNewIndexSoFar = newIndex
+        } else {
+            // 如果旧的节点在新的节点里，前一个索引没有比后面一个索引大就需要移动
+            moved = true
+        }
+
+        // 0 代表老的节点在新的节点里面是不存在的，所以要 +1
+        newIndexToOldIndexMap[newIndex - s2] = i + 1
+
+        // 找到就递归调用
+        patch(c2[newIndex].key)
+        patched++
+    }
+
+    const increasingNewIndexSequence = moved ? getSequence(newIndexToOldIndexMap) : []
+
+    // 因为调用的DOM API 的insertBefore是需要插入到一个元素的前面，所以要使用倒序排列
+    let j = increasingNewIndexSequence.length - 1
+    for(let i = toBePactched -1; i >= 0; i--) {
+        // 求出当前的节点
+        const nextIndex = i + s2
+        const nextChild = c2[nextIndex]
+        // 求出当前锚点
+        const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1] : null
+        // 需要移动的时候再移动
+        if(moved) {
+            if(j < 0 || i !== increasingNewIndexSequence[j]) {
+                // 如果不在子序列里面就需要移动位置
+                move(nextChild.key, anchor.key)
+            } else {
+                j--
+            }
+        }
+    }
+}
+```
+
+测试用例
+
+```javascript
+it('5. 中间对比的移动逻辑：节点存在新的和老的里面，但是位置变了', () => {
+    const mountElement = jest.fn()
+    const patch = jest.fn()
+    const unmount = jest.fn()
+    const move = jest.fn()
+    const { vueDiff } = require('../vue-diff')
+    vueDiff(
+        [
+            { key: 'a' },
+            { key: 'b' },
+            { key: 'c' },
+            { key: 'd' },
+            { key: 'e' },
+            { key: 'f' },
+            { key: 'g' }
+        ],
+        [
+            { key: 'a' },
+            { key: 'b' },
+            { key: 'e' },
+            { key: 'c' },
+            { key: 'd' },
+            { key: 'f' },
+            { key: 'g' }
+        ],
+        {
+            mountElement,
+            patch,
+            unmount,
+            move
+        }
+    )
+    // 第一次调用次数
+    expect(patch.mock.calls.length).toBe(7)
+    // 第一次调用的第一个参数
+    expect(patch.mock.calls[0][0]).toBe('a')
+    expect(patch.mock.calls[1][0]).toBe('b')
+    expect(patch.mock.calls[2][0]).toBe('g')
+    expect(patch.mock.calls[3][0]).toBe('f')
+    expect(patch.mock.calls[4][0]).toBe('c')
+    expect(patch.mock.calls[5][0]).toBe('d')
+    expect(patch.mock.calls[6][0]).toBe('e')
+    // e在新的里面需要移动
+    expect(move.mock.calls[0][0]).toBe('e')
+    // e需要移动到c的前面
+    expect(move.mock.calls[0][1]).toBe('c')
+    // e在新的里面需要移动
+    expect(move.mock.calls.length).toBe(1)
+})
+```
+
+执行测试用例
+
+ ![](./md/06.png)
+
