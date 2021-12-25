@@ -317,12 +317,18 @@ it("4. 老节点还有，新节点没了", () => {
 
 我们要确定是否需要删除K，那么就需要遍历新节点看看K是否在新节点里面，这时我们就可以看出双端对比算法的优势了，先已经把两边的相等的元素都剔除掉了，再遍历的时候，需要遍历的元素就变少了。但是还是需要遍历，且时间复杂度为O(n)，而遍历只是其中一种查找方案，我们还可以通过索引来进行查找，那么通过索引来查找的时间复杂度则为O(1)。
 
-中间对比
+中间对比代码实现解析
 
 ```javascript
 // 中间对比
 let s1 = i // 老节点的开始
 let s2 = i // 新节点的开始
+
+// 记录当前节点的总数量
+const toBePactched = e2 - s2 + 1
+// 记录当前处理的数量
+let patched = 0
+
 // 新节点的映射表
 const keyToNewIndexMap = new Map()
 for(let i = s2; i <= e2; i++) {
@@ -333,6 +339,12 @@ for(let i = s2; i <= e2; i++) {
 // 遍历老节点里面的key
 for(let i = s1; i <= e1; i++) {
     const prevChild = c1[i]
+    // 如果当前处理的数量已经大于当前节点总数，那么旧节点直接删除就可以了
+    if(patched >= toBePactched) {
+        unmount(prevChild.key)
+        continue
+    }
+
     let newIndex
     if(prevChild.key !== null || prevChild.key !== undefined) {
         // 如果用户设置了key那么就去映射表里面查询
@@ -353,6 +365,7 @@ for(let i = s1; i <= e1; i++) {
     } else {
         // 找到就递归调用
         patch(c2[newIndex].key)
+        patched++
     }
 }
 ```
