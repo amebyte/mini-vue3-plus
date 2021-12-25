@@ -305,3 +305,55 @@ it("4. 老节点还有，新节点没了", () => {
 
  ![](./md/04.png)
 
+
+
+中间对比：删掉老的-在老的里面存在，新的里面不存在
+
+ ![](./md/07.jpg)
+
+- 删掉老的（K）：在老的里面存在，新的里面不存在
+
+怎么确定K需要删除呢？
+
+我们要确定是否需要删除K，那么就需要遍历新节点看看K是否在新节点里面，这时我们就可以看出双端对比算法的优势了，先已经把两边的相等的元素都剔除掉了，再遍历的时候，需要遍历的元素就变少了。但是还是需要遍历，且时间复杂度为O(n)，而遍历只是其中一种查找方案，我们还可以通过索引来进行查找，那么通过索引来查找的时间复杂度则为O(1)。
+
+中间对比
+
+```javascript
+// 中间对比
+let s1 = i // 老节点的开始
+let s2 = i // 新节点的开始
+// 新节点的映射表
+const keyToNewIndexMap = new Map()
+for(let i = s2; i <= e2; i++) {
+    const nextChild = c2[i]
+    keyToNewIndexMap.set(nextChild.key, i)
+}
+
+// 遍历老节点里面的key
+for(let i = s1; i <= e1; i++) {
+    const prevChild = c1[i]
+    let newIndex
+    if(prevChild.key !== null || prevChild.key !== undefined) {
+        // 如果用户设置了key那么就去映射表里面查询
+        newIndex = keyToNewIndexMap.get(prevChild.key)
+    } else {
+        // 如果用户没有设置key，那么就遍历所有，时间复杂度为O(n)
+        for(let j = s2; j < e2; j++) {
+            if(isSameVnodeType(prevChild, c2[j])) {
+                newIndex = j
+                break
+            }
+        }
+    }
+    // 如果在新的节点里面没有找到
+    if(newIndex === undefined) {
+        // 没有找到就删除
+        unmount(prevChild.key)
+    } else {
+        // 找到就递归调用
+        patch(c2[newIndex].key)
+    }
+}
+```
+
