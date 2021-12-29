@@ -40,16 +40,27 @@ export function createRenderer(options) {
   }
 
   function processComponent(n1, n2, container: any, parentComponent, anchor) {
-    mountComponent(n2, container, parentComponent, anchor)
+      if(!n1) {
+        mountComponent(n2, container, parentComponent, anchor)
+      } else {
+        updateComponent(n1, n2)
+      }
   }
-  function mountComponent(vnode: any, container, parentComponent, anchor) {
-    const instance = createComponentInstance(vnode, parentComponent)
+
+  function updateComponent(n1, n2) {
+    const instance = (n2.component = n1.component)
+    instance.next = n2
+    instance.update()
+  }
+
+  function mountComponent(initialVNode: any, container, parentComponent, anchor) {
+    const instance = (initialVNode.component = createComponentInstance(initialVNode, parentComponent))
     setupComponent(instance)
-    setupRenderEffect(instance, vnode, container, anchor)
+    setupRenderEffect(instance, initialVNode, container, anchor)
   }
 
   function setupRenderEffect(instance: any, vnode, container, anchor) {
-    effect(() => {
+    instance.update = effect(() => {
       if (!instance.isMounted) {
         const { proxy } = instance
         const subTree = (instance.subTree = instance.render.call(proxy))
@@ -59,6 +70,11 @@ export function createRenderer(options) {
         instance.isMounted = true
       } else {
         console.log('update')
+        const { next, vnode } = instance
+        if(next) {
+            next.el = vnode.el
+            updateComponentPreRender(instance, next)
+        }
         const { proxy } = instance
         const subTree = instance.render.call(proxy)
         const prevSubTree = instance.subTree
@@ -66,6 +82,12 @@ export function createRenderer(options) {
         patch(prevSubTree, subTree, container, instance, anchor)
       }
     })
+  }
+
+  function updateComponentPreRender(instance, nextVNode) {
+    instance.vnode = nextVNode
+    instance.next = null
+    instance.props = nextVNode.props
   }
 
   function processElement(n1, n2, container: any, parentComponent, anchor) {

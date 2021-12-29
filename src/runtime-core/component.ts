@@ -11,6 +11,7 @@ export function createComponentInstance(vnode: any, parent) {
     console.log('createComponentInstance', parent)
     let component = {
         vnode,
+        next: null,
         type: vnode.type,
         setupState: {},
         props: {},
