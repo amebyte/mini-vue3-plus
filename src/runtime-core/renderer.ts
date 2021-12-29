@@ -2,6 +2,7 @@ import { effect } from '../reactivity/effect'
 import { isObject } from '../shared'
 import { ShapeFlags } from '../shared/ShapeFlags'
 import { createComponentInstance, setupComponent } from './component'
+import { shouldUpdateComponent } from './componentUpdateUtils'
 import { createAppAPI } from './createApp'
 import { Fragment, Text } from './vnode'
 
@@ -48,9 +49,13 @@ export function createRenderer(options) {
   }
 
   function updateComponent(n1, n2) {
-    const instance = (n2.component = n1.component)
-    instance.next = n2
-    instance.update()
+    if(shouldUpdateComponent(n1, n2)) {
+        const instance = (n2.component = n1.component)
+        instance.next = n2
+        instance.update()
+    } else {
+
+    }
   }
 
   function mountComponent(initialVNode: any, container, parentComponent, anchor) {
