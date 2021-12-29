@@ -49,12 +49,13 @@ export function createRenderer(options) {
   }
 
   function updateComponent(n1, n2) {
+    const instance = (n2.component = n1.component)
     if(shouldUpdateComponent(n1, n2)) {
-        const instance = (n2.component = n1.component)
         instance.next = n2
         instance.update()
     } else {
-
+        n2.el = n1.el
+        n2.vnode = n2
     }
   }
 
