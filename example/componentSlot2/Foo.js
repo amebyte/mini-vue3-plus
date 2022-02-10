@@ -5,6 +5,7 @@ export const Foo = {
     },
     render() {
         const foo = h("p", {}, "foot")
-        return h("div", {}, [foo])
+        console.log('slots', this.$slots)
+        return h("div", {}, [foo, this.$slots])
     }
 }
