@@ -4,7 +4,7 @@ window.self = null
 export const App = {
   render() {
     const app = h('div', {}, "App")
-    const foo = h(Foo, {}, h('p', {}, "coboy"))
+    const foo = h(Foo, {}, [h('p', {}, "coboy"), h("p", {}, "cobyte")])
     return h(
       'div',
       {
