@@ -23,6 +23,14 @@ Vue 实现了一套内容分发的 API，这套 API 的设计灵感源自 [Web 
 
 
 
+下面这段模版模板内容
+
+```html
+<todo-button>
+  Add todo
+</todo-button>
+```
+
 编译之后的代码
 
 ```javascript
@@ -34,6 +42,24 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
     ], undefined, true),
     _: 1 /* STABLE */
   }))
+}
+```
+
+todo-button组件模版内容
+
+```html
+<button class="btn-primary">
+  <slot></slot>
+</button>
+```
+
+编译之后的代码如下：
+
+```javascript
+export function render(_ctx, _cache, $props, $setup, $data, $options) {
+  return (_openBlock(), _createElementBlock("button", { class: "btn-primary" }, [
+    _renderSlot(_ctx.$slots, "default")
+  ]))
 }
 ```
 
