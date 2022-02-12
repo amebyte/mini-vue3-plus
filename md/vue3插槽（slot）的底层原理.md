@@ -43,9 +43,13 @@ todo-button子组件模版内容
 
 当组件渲染的时候，`<slot></slot>` 将会被替换为“Add todo”。 
 
-### 回顾组件渲染的流程
+### 回顾组件渲染的原理
 
 那么这其中底层的原理是什么呢？在理解插槽的底层原理之前，我们还需要回顾一下vue3的组件运行原理。
+
+组件的核心是它能够产出一坨VNode。对于 Vue 来说一个组件的核心就是它的渲染函数，组件的挂载本质就是执行渲染函数并得到要渲染的VNode，至于什么data/props/computed 这都是为渲染函数产出 VNode 过程中提供数据来源服务的，最关键的就是组件最终产出的VNode，因为这个才是需要渲染的内容。
+
+### 插槽的初始化原理
 
 vue3在渲染VNode的时候，发现VNode的类型是组件类型的时候，就会去走组件渲染的流程。组件渲染的流程就是首先创建组件实例，然后初始化组件实例，在初始化组件实例的时候就会去处理slot相关的内容。
 
@@ -75,7 +79,18 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
 }
 ```
 
-我们可以看到slot组件的children内容是一个Object类型，那么在创建这个组件的VNode的时候，就会去判断它的children是不是Object类型，如果是Object类型那么就往该组件的VNode的shapeFlag上挂上一个slot组件的标记。
+我们可以看到slot组件的children内容是一个Object类型，也就是下面这段代码：
+
+```javascript
+{
+    default: _withCtx(() => [
+      _createTextVNode(" Add todo ")
+    ], undefined, true),
+    _: 1 /* STABLE */
+}
+```
+
+那么在创建这个组件的VNode的时候，就会去判断它的children是不是Object类型，如果是Object类型那么就往该组件的VNode的shapeFlag上挂上一个slot组件的标记。
 
 如果是通过模板编译过来的那么就是标准的插槽children,是带有`_`属性的，是可以直接放在组件实例上的slots属性。
 
@@ -141,6 +156,135 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
     ]),
     _: 1 /* STABLE */
   }))
+}
+```
+
+上面讲过renderSlot函数，可以简单概括成下面的代码
+
+```javascript
+export function renderSlots(slots, name, props) {
+  const slot = slots[name]
+  if (slot) {
+    if (typeof slot === 'function') {
+      return createVNode(Fragment, {}, slot(props))
+    }
+  }
+}
+```
+
+slots是组件实例上传过来的插槽内容，其实就是这段内容
+
+```javascript
+{
+    default: _withCtx((slotProps) => [
+      _createTextVNode(_toDisplayString(slotProps.username), 1 /* TEXT */)
+    ]),
+    _: 1 /* STABLE */
+}
+```
+
+name是default，那么slots[name]得到的就是下面这个函数
+
+```javascript
+_withCtx((slotProps) => [
+      _createTextVNode(_toDisplayString(slotProps.username), 1 /* TEXT */)
+])
+```
+
+slot(props)就很明显是slot({ username: "coboy" })，这样就把子组件内的数据传到父组件的插槽内容中了。
+
+### 具名插槽原理
+
+有时我们需要多个插槽。例如对于一个带有如下模板的 `<base-layout>` 组件： 
+
+```html
+<div class="container">
+  <header>
+    <!-- 我们希望把页头放这里 -->
+  </header>
+  <main>
+    <!-- 我们希望把主要内容放这里 -->
+  </main>
+  <footer>
+    <!-- 我们希望把页脚放这里 -->
+  </footer>
+</div>
+```
+
+对于这样的情况，`<slot>` 元素有一个特殊的 attribute：`name`。通过它可以为不同的插槽分配独立的 ID，也就能够以此来决定内容应该渲染到什么地方： 
+
+```html
+<!--子组件-->
+<div class="container">
+  <header>
+    <slot name="header"></slot>
+  </header>
+  <main>
+    <slot></slot>
+  </main>
+  <footer>
+    <slot name="footer"></slot>
+  </footer>
+</div>
+```
+
+一个不带 `name` 的 `<slot>` 出口会带有隐含的名字“default”。 
+
+在向具名插槽提供内容的时候，我们可以在一个 `<template>` 元素上使用 `v-slot` 指令，并以 `v-slot` 的参数的形式提供其名称： 
+
+```html
+<!--父组件-->
+<base-layout>
+  <template v-slot:header>
+    <h1>header</h1>
+  </template>
+
+  <template v-slot:default>
+    <p>default</p>
+  </template>
+
+  <template v-slot:footer>
+    <p>footer</p>
+  </template>
+</base-layout>
+```
+
+父组件编译之后的内容：
+
+```javascript
+export function render(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_base_layout = _resolveComponent("base-layout")
+
+  return (_openBlock(), _createBlock(_component_base_layout, null, {
+    header: _withCtx(() => [
+      _createElementVNode("h1", null, "header")
+    ]),
+    default: _withCtx(() => [
+      _createElementVNode("p", null, "default")
+    ]),
+    footer: _withCtx(() => [
+      _createElementVNode("p", null, "footer")
+    ]),
+    _: 1 /* STABLE */
+  }))
+}
+```
+
+子组件编译之后的内容：
+
+```javascript
+export function render(_ctx, _cache, $props, $setup, $data, $options) {
+  return (_openBlock(), _createElementBlock("div", { class: "container" }, [
+    _createElementVNode("header", null, [
+      _renderSlot(_ctx.$slots, "header")
+    ]),
+    _createElementVNode("main", null, [
+      _renderSlot(_ctx.$slots, "default")
+    ]),
+    _createElementVNode("footer", null, [
+      _renderSlot(_ctx.$slots, "footer")
+    ])
+  ]))
 }
 ```
 
