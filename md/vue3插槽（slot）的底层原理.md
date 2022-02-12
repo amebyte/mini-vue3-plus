@@ -57,9 +57,9 @@ vue3在渲染VNode的时候，发现VNode的类型是组件类型的时候，就
 
 那么initSlots函数长啥样，都干了些什么呢？
 
-runtime-core\src\componentSlots.ts
+runtime-core\src\componentSlots.ts 
 
- ![](./images/slot02.png)
+![](./images/slot02.png)
 
 首先要判断该组件是不是slot组件，那么怎么判断该组件是不是slot组件呢？我们先要回去看一下上面父组件编译之后的代码：
 
@@ -83,13 +83,64 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
 
 如果用户搞骚操作不按规范走，那么就走`normalizeVNodeSlots`流程。
 
-子组件编译之后的代码：
+### 解析插槽中的内容
+
+我们先看看子组件编译之后的代码：
 
 ```javascript
 export function render(_ctx, _cache, $props, $setup, $data, $options) {
   return (_openBlock(), _createElementBlock("button", { class: "btn-primary" }, [
     _renderSlot(_ctx.$slots, "default")
   ]))
+}
+```
+
+上面我们也讲过了`<slot></slot>`标签被vue3编译之后的就变成了一个叫`_renderSlot`的函数。
+
+ ![](./images/slot03.png)
+
+`renderSlot`函数接受五个参数，第一个是实例上的插槽函数对象`slots`，第二个是插槽的名字，也就是将插槽内容渲染到指定位置 ，第三个是插槽作用域接收的`props`，第四个是插槽的默认内容渲染函数，第五个暂不太清楚什么意思。
+
+### 作用域插槽
+
+作用域插槽是一种子组件传父组件的传参的方式，解决了普通slot在parent中无法访问child数据的去问题。
+
+子组件模板
+
+```html
+<slot username="coboy"></slot>
+```
+
+编译后的代码
+
+```javascript
+export function render(_ctx, _cache, $props, $setup, $data, $options) {
+  return _renderSlot(_ctx.$slots, "default", { username: "coboy" })
+}
+```
+
+父组件模板
+
+```html
+<todo-button>
+    <template v-slot:default="slotProps">
+        {{ slotProps.username }}
+    </template>
+</todo-button>
+```
+
+编译后的代码
+
+```javascript
+export function render(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_todo_button = _resolveComponent("todo-button")
+
+  return (_openBlock(), _createBlock(_component_todo_button, null, {
+    default: _withCtx((slotProps) => [
+      _createTextVNode(_toDisplayString(slotProps.username), 1 /* TEXT */)
+    ]),
+    _: 1 /* STABLE */
+  }))
 }
 ```
 
