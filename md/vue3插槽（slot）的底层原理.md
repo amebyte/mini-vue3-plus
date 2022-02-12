@@ -327,3 +327,74 @@ export function renderSlots(slots, name, props) {
 }
 ```
 
+### 默认内容插槽的原理
+
+我们可能希望这个 `<button>` 内绝大多数情况下都渲染“Submit”文本。为了将“Submit”作为备用内容，我们可以将它放在 `<slot>` 标签内 
+
+```html
+<button type="submit">
+  <slot>Submit</slot>
+</button>
+```
+
+现在当我们在一个父级组件中使用 `<submit-button>` 并且不提供任何插槽内容时： 
+
+```html
+<submit-button></submit-button>
+```
+
+备用内容“Submit”将会被渲染： 
+
+```html
+<button type="submit">
+  Submit
+</button>
+```
+
+但是如果我们提供内容： 
+
+```html
+<submit-button>
+  Save
+</submit-button>
+```
+
+则这个提供的内容将会被渲染从而取代备用内容： 
+
+```html
+<button type="submit">
+  Save
+</button>
+```
+
+这其中的原理是什么呢？我们先来看看上面默认内容插槽编译之后的代码
+
+```javascript
+export function render(_ctx, _cache, $props, $setup, $data, $options) {
+  return (_openBlock(), _createElementBlock("button", { type: "submit" }, [
+    _renderSlot(_ctx.$slots, "default", {}, () => [
+      _createTextVNode("Submit")
+    ])
+  ]))
+}
+```
+
+我们可以看到插槽函数的内容是这样的
+
+```javascript
+_renderSlot(_ctx.$slots, "default", {}, () => [
+    _createTextVNode("Submit")
+])
+```
+
+我们再回顾看一下renderSlot函数
+
+`renderSlot`函数接受五个参数，第四个是插槽的默认内容渲染函数。
+
+ ![](./images/slot04.png)
+
+再通过renderSlot函数的源码我们可以看到，
+
+第一步，先获取父组件提供的内容插槽的内容，
+
+第二步，如果父组件有提供插槽内容则使用父组件提供的内容插槽，没有则执行默认内容渲染函数得到默认内容。
