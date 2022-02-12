@@ -288,3 +288,42 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
 }
 ```
 
+通过子组件编译之后的内容我们可以看到这三个slot渲染函数
+
+`_renderSlot(_ctx.$slots, "header")`
+
+`_renderSlot(_ctx.$slots, "default")`
+
+`_renderSlot(_ctx.$slots, "footer")`
+
+然后我们再回顾一下renderSlot渲染函数
+
+```javascript
+// renderSlots的简化
+export function renderSlots(slots, name, props) {
+  const slot = slots[name]
+  if (slot) {
+    if (typeof slot === 'function') {
+      return createVNode(Fragment, {}, slot(props))
+    }
+  }
+}
+```
+
+这个时候我们就可以很清楚的知道所谓具名函数是通过renderSlots渲染函数的第二参数去定位要渲染的父组件提供的插槽内容。父组件的插槽内容编译之后变成了一个object的数据类型。
+
+```javascript
+{
+    header: _withCtx(() => [
+      _createElementVNode("h1", null, "header")
+    ]),
+    default: _withCtx(() => [
+      _createElementVNode("p", null, "default")
+    ]),
+    footer: _withCtx(() => [
+      _createElementVNode("p", null, "footer")
+    ]),
+    _: 1 /* STABLE */
+}
+```
+
