@@ -10,3 +10,24 @@ prototype 一般称为显式原型，`__proto__`一般称为隐式原型。 每�
 - 原型链 
 
 当我们访问一个JS对象属性的时候，JS先会在这个对象定义的属性里找，找不到就会沿着这个对象的`__proto__`这个隐式原型关联起来的链条向上一个对象查找，这个链条就叫原型链。
+
+```javascript
+function Fn() {}
+Fn.prototype.name = 'coboy'
+let fn1 = new Fn()
+fn1.age = 18
+console.log(fn1.name) // coboy
+console.log(fn1.age) // 18
+```
+
+fn1是Fn函数new出来的实例对象，fn1.age是这个实例对象上属性，fn1.name则从Fn.prototype原型对象而来，因为fn1的`__proto__`隐式原型就是指向Fn这个函数的原型对象Fn.prototype。原型链某种意义上是让一个引用类型继承另一个引用类型的属性和方法。
+
+```javascript
+function Fn() {}
+Fn.prototype.name = 'coboy'
+let fn1 = new Fn()
+fn1.name = 'cobyte'
+console.log(fn1.name) // cobyte
+```
+
+当访问fn1这个实例对象的属性name的时候，JS先会在fn1这个实例对象的属性里查找，刚好fn1定义了一个name属性，所以就直接返回自身属性的值cobyte，否则就会继续沿着原型链向Fn.prototype上去找，那么就会返回coboy。
