@@ -32,3 +32,40 @@ console.log(fn1.name) // cobyte
 
 当访问fn1这个实例对象的属性name的时候，JS先会在fn1这个实例对象的属性里查找，刚好fn1定义了一个name属性，所以就直接返回自身属性的值cobyte，否则就会继续沿着原型链向Fn.prototype上去找，那么就会返回coboy。
 
+### 使用 Provide
+
+在 `setup()` 中使用 `provide` 时，我们首先从 `vue` 显式导入 `provide` 方法。这使我们能够调用 `provide` 来定义每个 property。
+
+`provide` 函数允许你通过两个参数定义 property
+
+1. name (`<String>` 类型)
+2. value
+
+```javascript
+import { provide } from 'vue'
+
+export default {
+  setup() {
+    provide('name', 'coboy')
+  }
+}
+```
+
+那么这个provide API实现原理是什么呢？
+
+provide 函数可以简化为
+
+```javascript
+export function provide(key, value) {
+    const currentInstance: any = getCurrentInstance()
+    if(currentInstance) {
+        let { provides } = currentInstance
+        const parentProvides = currentInstance.parent.provides
+        if(provides === parentProvides) {
+            provides = currentInstance.provides = Object.create(parentProvides)
+        }
+        provides[key] = value
+    }
+}
+```
+
