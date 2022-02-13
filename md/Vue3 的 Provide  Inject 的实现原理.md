@@ -57,11 +57,15 @@ provide 函数可以简化为
 
 ```javascript
 export function provide(key, value) {
+    // 获取当前组件实例
     const currentInstance: any = getCurrentInstance()
     if(currentInstance) {
+        // 获取当前组件实例上provides属性
         let { provides } = currentInstance
+        // 获取当前父级组件的provides属性
         const parentProvides = currentInstance.parent.provides
         if(provides === parentProvides) {
+            // Object.create() es6创建对象的另一种方式，可以理解为继承一个对象, 添加的属性是在原型下。
             provides = currentInstance.provides = Object.create(parentProvides)
         }
         provides[key] = value
