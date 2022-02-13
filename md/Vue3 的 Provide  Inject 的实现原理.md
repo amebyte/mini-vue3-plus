@@ -31,3 +31,4 @@ console.log(fn1.name) // cobyte
 ```
 
 当访问fn1这个实例对象的属性name的时候，JS先会在fn1这个实例对象的属性里查找，刚好fn1定义了一个name属性，所以就直接返回自身属性的值cobyte，否则就会继续沿着原型链向Fn.prototype上去找，那么就会返回coboy。
+
