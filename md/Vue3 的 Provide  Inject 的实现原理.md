@@ -2,6 +2,8 @@
 
 Vue3 的 Provide / Inject 的实现原理其实就是利用了原型和原型链的知识，所以在了解Vue3 的 Provide / Inject 的实现原理之前，我们先复习一下原型和原型链的知识。
 
+### 原型和原型链的知识回顾
+
 -  prototype 与 `__proto__`
 
 
@@ -51,6 +53,8 @@ export default {
 }
 ```
 
+### provide API实现原理
+
 那么这个provide API实现原理是什么呢？
 
 provide 函数可以简化为
@@ -74,11 +78,37 @@ export function provide(key, value) {
 }
 ```
 
-provide就是把传进来的数据存储在当前的组件实例对象上的provides上
+综上所述provide API就是通过获取当前组件的实例对象，传进来的数据存储在当前的组件实例对象上的provides上，并且通过ES6的新API Object.create把父组件的provides属性设置到当前的组件实例对象的provides属性的原型对象上。
+
+### 实例对象初始化时provides属性的处理
 
 源码位置：runtime-core/src/component.ts
 
  ![](./images/provide-inject01.png)
 
-我们通过查看instance对象的源码，可以看到，在instance组件实例对象上，存在parent和provides两个属性。如果存在父组件则把父组件的provides赋值给当前的组件实例对象的provides，如果没有就创建一个新的对象，并且把应用上下文的provides属性设置为新对象的原型对象上的属性。
+我们通过查看instance对象的源码，可以看到，在instance组件实例对象上，存在parent和provides两个属性。在初始化的时候如果存在父组件则把父组件的provides赋值给当前的组件实例对象的provides，如果没有就创建一个新的对象，并且把应用上下文的provides属性设置为新对象的原型对象上的属性。
+
+### 使用 inject
+
+在 `setup()` 中使用 `inject` 时，也需要从 `vue` 显式导入。导入以后，我们就可以调用它来定义暴露给我们的组件方式。
+
+`inject` 函数有两个参数：
+
+1. 要 inject 的 property 的 name
+2. 默认值 (**可选**)
+
+```javascript
+import { inject } from 'vue'
+
+export default {
+  setup() {
+    const name = inject('name', 'cobyte')
+    return {
+      name
+    }
+  }
+}
+```
+
+
 
