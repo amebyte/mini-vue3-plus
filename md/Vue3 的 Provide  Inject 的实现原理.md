@@ -64,6 +64,7 @@ export function provide(key, value) {
         let { provides } = currentInstance
         // 获取当前父级组件的provides属性
         const parentProvides = currentInstance.parent.provides
+        // 如果当前的provides和父级的provides相同则说明还没赋值
         if(provides === parentProvides) {
             // Object.create() es6创建对象的另一种方式，可以理解为继承一个对象, 添加的属性是在原型下。
             provides = currentInstance.provides = Object.create(parentProvides)
@@ -75,7 +76,9 @@ export function provide(key, value) {
 
 provide就是把传进来的数据存储在当前的组件实例对象上的provides上
 
+源码位置：runtime-core/src/component.ts
+
  ![](./images/provide-inject01.png)
 
-
+我们通过查看instance对象的源码，可以看到，在instance组件实例对象上，存在parent和provides两个属性。如果存在父组件则把父组件的provides赋值给当前的组件实例对象的provides，如果没有就创建一个新的对象，并且把应用上下文的provides属性设置为新对象的原型对象上的属性。
 
