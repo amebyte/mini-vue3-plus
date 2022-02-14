@@ -112,3 +112,35 @@ export default {
 
 ### inject API实现原理
 
+那么这个inject API实现原理是什么呢？
+
+inject 函数可以简化为
+
+```javascript
+export function inject(
+  key,
+  defaultValue,
+  treatDefaultAsFactory = false
+) {
+  // 获取当前组件实例对象
+  const instance = currentInstance || currentRenderingInstance
+  if (instance) {
+    // 如果intance位于根目录下，则返回到appContext的'provides'，否则就返回父组件的provides
+    const provides =
+      instance.parent == null
+        ? instance.vnode.appContext && instance.vnode.appContext.provides
+        : instance.parent.provides
+
+    if (provides && key in provides) {
+      return provides[key]
+    } else if (arguments.length > 1) {
+      // 如果存在1个参数以上
+      return treatDefaultAsFactory && isFunction(defaultValue)
+        // 如果默认内容是个函数的，就执行并且通过call方法把组件实例的代理对象绑定到该函数的this上
+        ? defaultValue.call(instance.proxy) 
+        : defaultValue
+    }
+  }
+}
+```
+
