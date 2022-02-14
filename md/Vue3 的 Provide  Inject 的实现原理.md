@@ -125,7 +125,7 @@ export function inject(
   // 获取当前组件实例对象
   const instance = currentInstance || currentRenderingInstance
   if (instance) {
-    // 如果intance位于根目录下，则返回到appContext的'provides'，否则就返回父组件的provides
+    // 如果intance位于根目录下，则返回到appContext的provides，否则就返回父组件的provides
     const provides =
       instance.parent == null
         ? instance.vnode.appContext && instance.vnode.appContext.provides
@@ -142,5 +142,62 @@ export function inject(
     }
   }
 }
+```
+
+通过inject源码分析我们可以知道，inject里面先获取当前组件的实例对象，然后判断是否根组件，如果是根组件则返回到appContext的provides，否则就返回父组件的provides。
+
+如果当前获取的key在provides上有值，那么就返回该值，如果没有则判断是否存在默认内容，默认内容如果是个函数，就执行并且通过call方法把组件实例的代理对象绑定到该函数的this上，否则就直接返回默认内容。
+
+### provide/inject实现原理总结
+
+通过上面的分析，可以得知provide/inject实现原理还是比较简单的，巧妙地利用了原型和原型链的进行数据的继承和获取。
+
+### 拓展：Object.create原理 
+
+方法说明 
+
+- Object.create()方法创建一个新的对象，并以方法的第一个参数作为新对象的`__proto__`属性的值（以第一个参数作为新对象的构造函数的原型对象） 
+- Object.create()方法还有第二个可选参数，是一个对象，对象的每个属性都会作为新对象的自身属性，对象的属性值以descriptor（Object.getOwnPropertyDescriptor(obj, 'key')）的形式出现，且enumerable默认为false 
+
+源码模拟
+
+```javascript
+Object.myCreate = function (proto, propertyObject = undefined) {
+    if (propertyObject === null) {
+        // 这里没有判断propertyObject是否是原始包装对象
+        throw 'TypeError'
+    } else {
+        function Fn () {}
+        Fn.prototype = proto
+        const obj = new Fn()
+        if (propertyObject !== undefined) {
+            Object.defineProperties(obj, propertyObject)
+        }
+        if (proto === null) {
+            // 创建一个没有原型对象的对象，Object.create(null)
+            obj.__proto__ = null
+        }
+        return obj
+    }
+}
+```
+
+定义一个空的构造函数，然后指定构造函数的原型对象，通过new运算符创建一个空对象，如果发现传递了第二个参数，通过Object.defineProperties为创建的对象设置key、value，最后返回创建的对象即可。
+
+示例 
+
+```javascript
+// 第二个参数为null时，抛出TypeError
+// const throwErr = Object.myCreate({name: 'coboy'}, null)  // Uncaught TypeError
+// 构建一个以
+const obj1 = Object.myCreate({name: 'coboy'})
+console.log(obj1)  // {}, obj1的构造函数的原型对象是{name: 'coboy'}
+const obj2 = Object.myCreate({name: 'coboy'}, {
+    age: {
+        value: 18,
+        enumerable: true
+    }
+})
+console.log(obj2)  // {age: 18}, obj2的构造函数的原型对象是{name: 'coboy'}
 ```
 
