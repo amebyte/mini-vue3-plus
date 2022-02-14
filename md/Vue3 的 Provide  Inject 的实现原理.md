@@ -73,3 +73,9 @@ export function provide(key, value) {
 }
 ```
 
+provide就是把传进来的数据存储在当前的组件实例对象上的provides上
+
+ ![](./images/provide-inject01.png)
+
+
+
