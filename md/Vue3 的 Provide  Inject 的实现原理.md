@@ -1,6 +1,6 @@
 # Vue3 的 Provide / Inject 的实现原理
 
-Vue3 的 Provide / Inject 的实现原理其实就是利用了原型和原型链的知识，所以在了解Vue3 的 Provide / Inject 的实现原理之前，我们先复习一下原型和原型链的知识。
+Vue3 的 Provide / Inject 的实现原理其实就是巧妙利用了原型和原型链的来实现的，所以在了解Vue3 的 Provide / Inject 的实现原理之前，我们先复习一下原型和原型链的知识。
 
 ### 原型和原型链的知识回顾
 
@@ -33,6 +33,8 @@ console.log(fn1.name) // cobyte
 ```
 
 当访问fn1这个实例对象的属性name的时候，JS先会在fn1这个实例对象的属性里查找，刚好fn1定义了一个name属性，所以就直接返回自身属性的值cobyte，否则就会继续沿着原型链向Fn.prototype上去找，那么就会返回coboy。
+
+复习完原型和原型链的知识之后，我们就开始进入Provide/Inject的实现原理探索。
 
 ### 使用 Provide
 
@@ -150,7 +152,9 @@ export function inject(
 
 ### provide/inject实现原理总结
 
-通过上面的分析，可以得知provide/inject实现原理还是比较简单的，巧妙地利用了原型和原型链的进行数据的继承和获取。
+通过上面的分析，可以得知provide/inject实现原理还是比较简单的，就是巧妙地利用了原型和原型链的进行数据的继承和获取。provide API调用设置的时候，设置父级的provides为当前provides对象原型对象上的属性，在inject获取provides对象中的属性值时，优先获取provides对象自身的属性，如果自身查找不到，则沿着原型链向上一个对象中去查找。
+
+
 
 ### 拓展：Object.create原理 
 
@@ -168,6 +172,7 @@ Object.myCreate = function (proto, propertyObject = undefined) {
         throw 'TypeError'
     } else {
         function Fn () {}
+        // 设置原型对象属性
         Fn.prototype = proto
         const obj = new Fn()
         if (propertyObject !== undefined) {
