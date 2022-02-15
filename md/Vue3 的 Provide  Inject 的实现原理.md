@@ -207,7 +207,7 @@ const obj2 = Object.myCreate({name: 'coboy'}, {
 console.log(obj2)  // {age: 18}, obj2的构造函数的原型对象是{name: 'coboy'}
 ```
 
-### 两个连续赋值的表达式
+### 拓展：两个连续赋值的表达式
 
 `provides = currentInstance.provides = Object.create(parentProvides)` 发生了什么？
 
