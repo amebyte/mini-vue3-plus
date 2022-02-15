@@ -7,7 +7,7 @@ Vue3 的 Provide / Inject 的实现原理其实就是巧妙利用了原型和原
 -  prototype 与 `__proto__`
 
 
-prototype 一般称为显式原型，`__proto__`一般称为隐式原型。 每一个函数在创建之后，在默认情况下，会拥有一个名为 prototype 的属性，这个属 性表示函数的原型对象。
+prototype 一般称为显式原型，`__proto__`一般称为隐式原型。 每一个函数在创建之后，在默认情况下，会拥有一个名为 prototype 的属性，这个属性表示函数的原型对象。
 
 - 原型链 
 
@@ -80,7 +80,7 @@ export function provide(key, value) {
 }
 ```
 
-综上所述provide API就是通过获取当前组件的实例对象，传进来的数据存储在当前的组件实例对象上的provides上，并且通过ES6的新API Object.create把父组件的provides属性设置到当前的组件实例对象的provides属性的原型对象上。
+综上所述provide API就是通过获取当前组件的实例对象，将传进来的数据存储在当前的组件实例对象上的provides上，并且通过ES6的新API Object.create把父组件的provides属性设置到当前的组件实例对象的provides属性的原型对象上。
 
 
 ### 实例对象初始化时provides属性的处理
