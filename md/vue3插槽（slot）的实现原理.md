@@ -1,10 +1,10 @@
-# Vue3插槽（slot）的实现原理
+# Vue3插槽（Slot）的实现原理
 
 ### Vue官方对插槽的定义
 
 Vue 实现了一套内容分发的 API，这套 API 的设计灵感源自 [Web Components 规范草案](https://github.com/w3c/webcomponents/blob/gh-pages/proposals/Slots-Proposal.md)，将 `<slot>` 元素作为承载分发内容的出口。 
 
-### slot到底是什么
+### Slot到底是什么
 
 那么slot到底是什么呢？slot其实是一个接受父组件传过来的插槽内容，然后生成VNode并返回的函数。
 
