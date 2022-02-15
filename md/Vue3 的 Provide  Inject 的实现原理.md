@@ -83,7 +83,7 @@ export function provide(key, value) {
 综上所述provide API就是通过获取当前组件的实例对象，将传进来的数据存储在当前的组件实例对象上的provides上，并且通过ES6的新API Object.create把父组件的provides属性设置到当前的组件实例对象的provides属性的原型对象上。
 
 
-### 实例对象初始化时provides属性的处理
+### 组件实例对象初始化时provides属性的处理
 
 源码位置：runtime-core/src/component.ts
 
