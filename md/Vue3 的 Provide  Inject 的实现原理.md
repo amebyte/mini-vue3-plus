@@ -82,9 +82,6 @@ export function provide(key, value) {
 
 综上所述provide API就是通过获取当前组件的实例对象，传进来的数据存储在当前的组件实例对象上的provides上，并且通过ES6的新API Object.create把父组件的provides属性设置到当前的组件实例对象的provides属性的原型对象上。
 
-`provides = currentInstance.provides = Object.create(parentProvides)` 发生了什么？
-
-首先 `Object.create(parentProvides)` 创建了一个新的对象引用，如果只是把 `currentInstance.provides` 更新为新的对象引用，那么`provides`的引用还是旧的引用，所以需要同时把`provides`的引用也更新为新的对象引用。
 
 ### 实例对象初始化时provides属性的处理
 
@@ -210,3 +207,20 @@ const obj2 = Object.myCreate({name: 'coboy'}, {
 console.log(obj2)  // {age: 18}, obj2的构造函数的原型对象是{name: 'coboy'}
 ```
 
+### 两个连续赋值的表达式
+
+`provides = currentInstance.provides = Object.create(parentProvides)` 发生了什么？
+
+首先 `Object.create(parentProvides)` 创建了一个新的对象引用，如果只是把 `currentInstance.provides` 更新为新的对象引用，那么`provides`的引用还是旧的引用，所以需要同时把`provides`的引用也更新为新的对象引用。
+
+**来自《JavaScript权威指南》的解析**
+
+- JavaScript总是严格按照从左至右的顺序来计算表达式
+- 一切都是表达式，一切都是运算
+
+```
+provides = currentInstance.provides = Object.create(parentProvides)
+```
+
+上述的provides是一个表达式，它被严格地称为“赋值表达式的左手端(Ihs)操作数”。
+而右侧 `currentInstance.provides = Object.create(parentProvides)` 这一个整体也当做一个表达式，一个赋值表达式，这一个整体赋值表达式的计算结果是赋值给了最左侧的provides
