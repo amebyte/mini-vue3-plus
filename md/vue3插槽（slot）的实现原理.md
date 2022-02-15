@@ -6,7 +6,7 @@ Vue 实现了一套内容分发的 API，这套 API 的设计灵感源自 [Web 
 
 ### Slot到底是什么
 
-那么slot到底是什么呢？slot其实是一个接受父组件传过来的插槽内容，然后生成VNode并返回的函数。
+那么Slot到底是什么呢？Slot其实是一个接受父组件传过来的插槽内容，然后生成VNode并返回的函数。
 
 我们一般是使用 `<slot></slot>` 这对标签进行接受父组件传过来的内容，那么这对标签最终编译之后是一个创建VNode的函数，我们可以叫做创建插槽VNode的函数。
 
@@ -51,7 +51,7 @@ todo-button子组件模版内容
 
 ### 插槽的初始化原理
 
-vue3在渲染VNode的时候，发现VNode的类型是组件类型的时候，就会去走组件渲染的流程。组件渲染的流程就是首先创建组件实例，然后初始化组件实例，在初始化组件实例的时候就会去处理slot相关的内容。
+Vue3在渲染VNode的时候，发现VNode的类型是组件类型的时候，就会去走组件渲染的流程。组件渲染的流程就是首先创建组件实例，然后初始化组件实例，在初始化组件实例的时候就会去处理Slot相关的内容。
 
 在源码的runtime-core\src\component.ts里面
 
@@ -65,7 +65,7 @@ runtime-core\src\componentSlots.ts
 
 ![](./images/slot02.png)
 
-首先要判断该组件是不是slot组件，那么怎么判断该组件是不是slot组件呢？我们先要回去看一下上面父组件编译之后的代码：
+首先要判断该组件是不是Slot组件，那么怎么判断该组件是不是Slot组件呢？我们先要回去看一下上面父组件编译之后的代码：
 
 ```javascript
 export function render(_ctx, _cache, $props, $setup, $data, $options) {
@@ -79,7 +79,7 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
 }
 ```
 
-我们可以看到slot组件的children内容是一个Object类型，也就是下面这段代码：
+我们可以看到Slot组件的children内容是一个Object类型，也就是下面这段代码：
 
 ```javascript
 {
@@ -90,9 +90,9 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
 }
 ```
 
-那么在创建这个组件的VNode的时候，就会去判断它的children是不是Object类型，如果是Object类型那么就往该组件的VNode的shapeFlag上挂上一个slot组件的标记。
+那么在创建这个组件的VNode的时候，就会去判断它的children是不是Object类型，如果是Object类型那么就往该组件的VNode的shapeFlag上挂上一个Slot组件的标记。
 
-如果是通过模板编译过来的那么就是标准的插槽children,是带有`_`属性的，是可以直接放在组件实例上的slots属性。
+如果是通过模板编译过来的那么就是标准的插槽children,是带有`_`属性的，是可以直接放在组件实例上的`slots`属性。
 
 如果是用户自己写的插槽对象，那么就没有`_`属性，那么就需要进行规范化处理，走`normalizeObjectSlots` 。
 
@@ -172,7 +172,7 @@ export function renderSlots(slots, name, props) {
 }
 ```
 
-slots是组件实例上传过来的插槽内容，其实就是这段内容
+`slots`是组件实例上传过来的插槽内容，其实就是这段内容
 
 ```javascript
 {
@@ -288,7 +288,7 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
 }
 ```
 
-通过子组件编译之后的内容我们可以看到这三个slot渲染函数
+通过子组件编译之后的内容我们可以看到这三个Slot渲染函数
 
 `_renderSlot(_ctx.$slots, "header")`
 
@@ -310,7 +310,7 @@ export function renderSlots(slots, name, props) {
 }
 ```
 
-这个时候我们就可以很清楚的知道所谓具名函数是通过renderSlots渲染函数的第二参数去定位要渲染的父组件提供的插槽内容。父组件的插槽内容编译之后变成了一个object的数据类型。
+这个时候我们就可以很清楚的知道所谓具名函数是通过renderSlots渲染函数的第二参数去定位要渲染的父组件提供的插槽内容。父组件的插槽内容编译之后变成了一个Object的数据类型。
 
 ```javascript
 {
