@@ -91,7 +91,7 @@ export function provide(key, value) {
 
 我们通过查看instance对象的源码，可以看到，在instance组件实例对象上，存在parent和provides两个属性。在初始化的时候如果存在父组件则把父组件的provides赋值给当前的组件实例对象的provides，如果没有就创建一个新的对象，并且把应用上下文的provides属性设置为新对象的原型对象上的属性。
 
-### 使用 inject
+### 使用 Inject
 
 在 `setup()` 中使用 `inject` 时，也需要从 `vue` 显式导入。导入以后，我们就可以调用它来定义暴露给我们的组件方式。
 
