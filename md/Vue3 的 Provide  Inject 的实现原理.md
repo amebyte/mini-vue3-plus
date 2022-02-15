@@ -211,7 +211,7 @@ console.log(obj2)  // {age: 18}, obj2的构造函数的原型对象是{name: 'co
 
 `provides = currentInstance.provides = Object.create(parentProvides)` 发生了什么？
 
-首先 `Object.create(parentProvides)` 创建了一个新的对象引用，如果只是把 `currentInstance.provides` 更新为新的对象引用，那么`provides`的引用还是旧的引用，所以需要同时把`provides`的引用也更新为新的对象引用。
+`Object.create(parentProvides)` 创建了一个新的对象引用，如果只是把 `currentInstance.provides` 更新为新的对象引用，那么`provides`的引用还是旧的引用，所以需要同时把`provides`的引用也更新为新的对象引用。
 
 **来自《JavaScript权威指南》的解析**
 
@@ -223,4 +223,18 @@ provides = currentInstance.provides = Object.create(parentProvides)
 ```
 
 上述的provides是一个表达式，它被严格地称为“赋值表达式的左手端(Ihs)操作数”。
-而右侧 `currentInstance.provides = Object.create(parentProvides)` 这一个整体也当做一个表达式，一个赋值表达式，这一个整体赋值表达式的计算结果是赋值给了最左侧的provides
+而右侧 `currentInstance.provides = Object.create(parentProvides)` 这一个整体也当做一个表达式，这一个整体赋值表达式的计算结果是赋值给了最左侧的provides
+`currentInstance.provides = Object.create(parentProvides)` 这个表达式同时也是一个赋值表达式，Object.create(parentProvides)创建了一个新的引用赋值给了currentInstance这个引用上的provides属性
+
+`currentInstance.provides`这个表达式的语义是：
+
+- 计算单值表达式currentInstance，得到currentInstance的引用
+- 将右侧的名字provides理解为一个标识符，并作为“.”运算的右操作数
+- 计算`currentInstance.provides`表达式的结果(Result)
+
+`currentInstance.provides`当它作为赋值表达式的左操作数时，它是一个被赋值的引用，而当它作为右操作数时，则计算它的值。
+
+
+
+注意：赋值表达式左侧的操作数可以是另一个表达式，而在声明语句中的等号左边，绝不可能是一个表达式。
+例如上面的如果写成了let provides = xxx，那么这个时候，**provides只是一个表达名字的、静态语法分析期作为标识符来理解的字面文本，而不是一个表达式**。
