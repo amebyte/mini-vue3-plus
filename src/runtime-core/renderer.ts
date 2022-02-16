@@ -72,7 +72,7 @@ export function createRenderer(options) {
         const { proxy } = instance
         const subTree = (instance.subTree = instance.render.call(proxy))
         patch(null, subTree, container, instance, anchor)
-        // vnode.el = subTree.el
+        
         instance.vnode.el = subTree.el // 这样显式赋值会不会好理解一点呢
         instance.isMounted = true
       } else {
