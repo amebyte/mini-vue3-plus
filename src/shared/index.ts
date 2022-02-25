@@ -21,3 +21,7 @@ export const capitalize = (str: string) => {
 export const toHandlerKey = (str: string) => {
     return str ? 'on' + capitalize(str) : ''
 }
+
+export const isFunction = (val: unknown): val is Function =>
+  typeof val === 'function'
+export const isString = (val: unknown): val is string => typeof val === 'string'
