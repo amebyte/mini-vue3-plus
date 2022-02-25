@@ -1,12 +1,30 @@
+import { isRef } from "../reactivity/ref"
+import { isFunction, isString } from "../shared"
 import { ShapeFlags } from "../shared/ShapeFlags"
+import { currentRenderingInstance } from "./componentRenderContext"
 
 export const Fragment = Symbol('Fragment')
 export const Text = Symbol('Text')
+
+const normalizeRef = ({
+    ref,
+    ref_key,
+    ref_for
+  }) => {
+    return (
+      ref != null
+        ? isString(ref) || isRef(ref) || isFunction(ref)
+          ? { i: currentRenderingInstance, r: ref, k: ref_key, f: !!ref_for }
+          : ref
+        : null
+    ) as any
+  }
 
 export function createVNode(type, props?, children?) {
     const vnode = {
         type,
         props,
+        ref: props && normalizeRef(props),
         children,
         component: null,
         key: props && props.key,

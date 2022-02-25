@@ -2,8 +2,10 @@ import { effect } from '../reactivity/effect'
 import { isObject } from '../shared'
 import { ShapeFlags } from '../shared/ShapeFlags'
 import { createComponentInstance, setupComponent } from './component'
+import { renderComponentRoot } from './componentRenderUtils'
 import { shouldUpdateComponent } from './componentUpdateUtils'
 import { createAppAPI } from './createApp'
+import { setRef } from './rendererTemplateRef'
 import { queueJobs } from './scheduler'
 import { Fragment, Text } from './vnode'
 
@@ -21,7 +23,7 @@ export function createRenderer(options) {
   }
 
   function patch(n1, n2, container: any, parentComponent, anchor) {
-    const { type, shapeFlag } = n2
+    const { type, shapeFlag, ref } = n2
 
     // Fragment => 只渲染 children
     switch (type) {
@@ -38,6 +40,11 @@ export function createRenderer(options) {
           processComponent(n1, n2, container, parentComponent, anchor)
         }
         break
+    }
+
+    // set ref
+    if (ref != null && parentComponent) {
+        setRef(ref, n1 && n1.ref, parentSuspense, n2 || n1, !n2)
     }
   }
 
@@ -69,8 +76,8 @@ export function createRenderer(options) {
   function setupRenderEffect(instance: any, vnode, container, anchor) {
     instance.update = effect(() => {
       if (!instance.isMounted) {
-        const { proxy } = instance
-        const subTree = (instance.subTree = instance.render.call(proxy))
+        // const { proxy } = instance
+        const subTree = (instance.subTree = renderComponentRoot(instance))
         patch(null, subTree, container, instance, anchor)
         
         instance.vnode.el = subTree.el // 这样显式赋值会不会好理解一点呢
@@ -82,8 +89,8 @@ export function createRenderer(options) {
             next.el = vnode.el
             updateComponentPreRender(instance, next)
         }
-        const { proxy } = instance
-        const subTree = instance.render.call(proxy)
+        // const { proxy } = instance
+        const subTree = renderComponentRoot(instance)
         const prevSubTree = instance.subTree
         instance.subTree = subTree
         patch(prevSubTree, subTree, container, instance, anchor)
