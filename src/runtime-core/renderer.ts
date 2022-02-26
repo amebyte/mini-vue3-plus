@@ -44,7 +44,7 @@ export function createRenderer(options) {
 
     // set ref
     if (ref != null && parentComponent) {
-        setRef(ref, n1 && n1.ref, parentSuspense, n2 || n1, !n2)
+        setRef(ref, n2 || n1, !n2)
     }
   }
 
