@@ -8,7 +8,8 @@ export const App = {
     return h(
       'div',
       {
-        onClick: this.refHandler
+        onClick: this.refHandler,
+        ref:'elmentRef'
       },
       [
         h(Foo, { ref: 'fooRef'})
@@ -17,13 +18,16 @@ export const App = {
   },
   setup() {
     const fooRef = ref(null)
+    const elmentRef = ref(null)
     const refHandler = () => {
         console.log('fooRef', fooRef)
-        fooRef.emitAdd()
+        fooRef.value.emitAdd()
+        console.log('elmentRef', elmentRef.value)
     }
     return {
       fooRef,
-      refHandler
+      refHandler,
+      elmentRef
     }
   },
 }
