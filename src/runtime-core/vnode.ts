@@ -7,14 +7,12 @@ export const Fragment = Symbol('Fragment')
 export const Text = Symbol('Text')
 
 const normalizeRef = ({
-    ref,
-    ref_key,
-    ref_for
+    ref
   }) => {
     return (
       ref != null
         ? isString(ref) || isRef(ref) || isFunction(ref)
-          ? { i: currentRenderingInstance, r: ref, k: ref_key, f: !!ref_for }
+          ? { i: currentRenderingInstance, r: ref}
           : ref
         : null
     ) as any
