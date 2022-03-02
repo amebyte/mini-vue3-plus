@@ -8,7 +8,6 @@ import { initSlots } from "./componentSlots"
 let currentInstance = null
 
 export function createComponentInstance(vnode: any, parent) {
-    console.log('createComponentInstance', parent)
     let component = {
         vnode,
         next: null,

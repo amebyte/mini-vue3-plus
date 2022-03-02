@@ -2,7 +2,7 @@ import { h } from "../../lib/mini-vue.esm.js"
 export const Foo = {
     setup() {
         const emitAdd = () => {
-            console.log('emit++ add')
+            console.log('template ref')
         }
         return {
             emitAdd
