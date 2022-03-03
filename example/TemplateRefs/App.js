@@ -1,4 +1,4 @@
-import { h, ref } from '../../lib/mini-vue.esm.js'
+import { h, ref, nextTick } from '../../lib/mini-vue.esm.js'
 import { Foo } from './Foo.js'
 window.self = null
 export const App = {
@@ -24,6 +24,11 @@ export const App = {
         fooRef.value.emitAdd()
         console.log('elmentRef', elmentRef.value)
     }
+    nextTick(() => {
+        console.log('nextTickfooRef', fooRef)
+        fooRef.value.emitAdd()
+        console.log('nextTickelmentRef', elmentRef.value)
+    })
     return {
       fooRef,
       refHandler,

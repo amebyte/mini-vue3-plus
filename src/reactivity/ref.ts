@@ -31,7 +31,7 @@ function convert(value) {
     return isObject(value) ? reactive(value) : value
 }
 
-function trackRefValue(ref) {console.log('trackRefValue', isTacking())
+function trackRefValue(ref) {
     if(isTacking()) trackEffect(ref.dep)
 }
 
