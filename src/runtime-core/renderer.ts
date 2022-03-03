@@ -23,6 +23,8 @@ export function createRenderer(options) {
   }
 
   function patch(n1, n2, container: any, parentComponent, anchor) {
+    // 基于 n2 的类型来判断
+    // 因为 n2 是新的 vnode
     const { type, shapeFlag, ref } = n2
 
     // Fragment => 只渲染 children
@@ -76,7 +78,6 @@ export function createRenderer(options) {
   function setupRenderEffect(instance: any, vnode, container, anchor) {
     instance.update = effect(() => {
       if (!instance.isMounted) {
-        // const { proxy } = instance
         const subTree = (instance.subTree = renderComponentRoot(instance))
         patch(null, subTree, container, instance, anchor)
         
@@ -89,7 +90,6 @@ export function createRenderer(options) {
             next.el = vnode.el
             updateComponentPreRender(instance, next)
         }
-        // const { proxy } = instance
         const subTree = renderComponentRoot(instance)
         const prevSubTree = instance.subTree
         instance.subTree = subTree
