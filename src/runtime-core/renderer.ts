@@ -29,6 +29,7 @@ export function createRenderer(options) {
 
     // Fragment => 只渲染 children
     switch (type) {
+      // 其中还有几个类型比如： static fragment comment
       case Fragment:
         processFragment(n1, n2, container, parentComponent, anchor)
         break
@@ -36,9 +37,12 @@ export function createRenderer(options) {
         processText(n1, n2, container)
         break
       default:
+          // 这里就基于 shapeFlag 来处理
         if (shapeFlag & ShapeFlags.ELEMENT) {
+          // 处理 element
           processElement(n1, n2, container, parentComponent, anchor)
         } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+          // 处理 component
           processComponent(n1, n2, container, parentComponent, anchor)
         }
         break
@@ -121,8 +125,11 @@ export function createRenderer(options) {
     console.log('patchElement')
     const oldProps = n1.props || {}
     const newProps = n2.props || {}
+    // 需要把 el 挂载到新的 vnode
     const el = (n2.el = n1.el)
+    // 对比 children
     patchChildren(n1, n2, el, parentComponent, anchor)
+    // 对比 props
     patchProps(el, oldProps, newProps)
   }
 
@@ -329,6 +336,13 @@ export function createRenderer(options) {
 
   function patchProps(el, oldProps, newProps) {
     if (oldProps !== newProps) {
+      // 对比 props 有以下几种情况
+      // 1. oldProps 有，newProps 也有，但是 val 值变更了
+      // 举个栗子
+      // 之前: oldProps.id = 1 ，更新后：newProps.id = 2
+
+      // key 存在 oldProps 里 也存在 newProps 内
+      // 以 newProps 作为基准
       for (const key in newProps) {
         const prevProp = oldProps[key]
         const nextProp = newProps[key]
@@ -370,10 +384,15 @@ export function createRenderer(options) {
   }
 
   function processFragment(n1, n2, container: any, parentComponent, anchor) {
-    mountChildren(n2.children, container, parentComponent, anchor)
+      // 只需要渲染 children ，然后给添加到 container 内
+    if (!n1) {
+        // 初始化 Fragment 逻辑点
+        mountChildren(n2.children, container, parentComponent, anchor)
+    }
   }
 
   function processText(n1, n2, container: any) {
+    // 处理 Text 节点
     const { children } = n2
     const textNode = (n2.el = document.createTextNode(children))
     container.append(textNode)
