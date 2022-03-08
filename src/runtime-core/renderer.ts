@@ -347,12 +347,18 @@ export function createRenderer(options) {
         const prevProp = oldProps[key]
         const nextProp = newProps[key]
         if (prevProp !== nextProp) {
+          // 对比属性
+          // 需要交给 host 来更新 key
           hostPatchProp(el, key, prevProp, nextProp)
         }
       }
       if (oldProps !== {}) {
         for (const key in oldProps) {
           if (!(key in newProps)) {
+            // 2. oldProps 有，而 newProps 没有了
+            // 之前： {id:1,tId:2}  更新后： {id:1}
+            // 这种情况下我们就应该以 oldProps 作为基准，因为在 newProps 里面是没有的 tId 的
+            // 还需要注意一点，如果这个 key 在 newProps 里面已经存在了，说明已经处理过了，就不要在处理了
             hostPatchProp(el, key, oldProps[key], null)
           }
         }
