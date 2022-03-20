@@ -11,7 +11,7 @@
 
 崔效瑞老师还把他的mini-vue库的实现做成了视频教程，大家如果想学的话，也可以扫码进行学习。
 
- ![](./md/study-mini-vue.jpg)
+ ![](https://user-images.githubusercontent.com/24350739/159156982-ad40a43a-e312-4e06-a843-cf77f27d1f3e.jpg)
 
 
 
