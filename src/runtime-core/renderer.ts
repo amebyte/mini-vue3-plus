@@ -55,7 +55,9 @@ export function createRenderer(options) {
   }
 
   function processComponent(n1, n2, container: any, parentComponent, anchor) {
+      // 如果 n1 没有值的话，那么就是 mount
       if(!n1) {
+        // 初始化 component
         mountComponent(n2, container, parentComponent, anchor)
       } else {
         updateComponent(n1, n2)
