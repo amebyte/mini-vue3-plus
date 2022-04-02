@@ -10,12 +10,12 @@ let currentInstance = null
 export function createComponentInstance(vnode: any, parent) {
     let component = {
         vnode,
-        next: null,
+        next: null, // 需要更新的 vnode，用于更新 component 类型的组件
         type: vnode.type,
-        setupState: {},
+        setupState: {}, // 存储 setup 的返回值
         props: {},
-        slots: {},
-        provides: parent ? parent.provides : {},
+        slots: {}, // 存放插槽的数据
+        provides: parent ? parent.provides : {}, // 获取 parent 的 provides 作为当前组件的初始化值 这样就可以继承 parent.provides 的属性了
         parent,
         isMounted: false,
         subTree: {},
