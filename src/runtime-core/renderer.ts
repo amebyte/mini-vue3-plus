@@ -87,29 +87,65 @@ export function createRenderer(options) {
   }
 
   function mountComponent(initialVNode: any, container, parentComponent, anchor) {
+    // 1. 先创建一个 component instance
     const instance = (initialVNode.component = createComponentInstance(initialVNode, parentComponent))
+    // 2. 给 instance 加工加工
     setupComponent(instance)
     setupRenderEffect(instance, initialVNode, container, anchor)
   }
 
   function setupRenderEffect(instance: any, vnode, container, anchor) {
+    // 调用 render
+    // 应该传入 ctx 也就是 proxy
+    // ctx 可以选择暴露给用户的 api
+    // 源代码里面是调用的 renderComponentRoot 函数
+    // 这里为了简化直接调用 render
+
+    // obj.name  = "111"
+    // obj.name = "2222"
+    // 从哪里做一些事
+    // 收集数据改变之后要做的事 (函数)
+    // 依赖收集   effect 函数
+    // 触发依赖
     instance.update = effect(() => {
       if (!instance.isMounted) {
+        // 组件初始化的时候会执行这里
+        // 为什么要在这里调用 render 函数呢
+        // 是因为在 effect 内调用 render 才能触发依赖收集
+        // 等到后面响应式的值变更后会再次触发这个函数  
         const subTree = (instance.subTree = renderComponentRoot(instance))
+        // 这里基于 subTree 再次调用 patch
+        // 基于 render 返回的 vnode ，再次进行渲染
+        // 这里我把这个行为隐喻成开箱
+        // 一个组件就是一个箱子
+        // 里面有可能是 element （也就是可以直接渲染的）
+        // 也有可能还是 component
+        // 这里就是递归的开箱
+        // 而 subTree 就是当前的这个箱子（组件）装的东西
+        // 箱子（组件）只是个概念，它实际是不需要渲染的
+        // 要渲染的是箱子里面的 subTree
         patch(null, subTree, container, instance, anchor)
-        
+        // 把 root element 赋值给 组件的vnode.el ，为后续调用 $el 的时候获取值
         instance.vnode.el = subTree.el // 这样显式赋值会不会好理解一点呢
         instance.isMounted = true
       } else {
-        console.log('update')
+        // 响应式的值变更后会从这里执行逻辑
+        // 主要就是拿到新的 vnode ，然后和之前的 vnode 进行对比
+
+        // 拿到最新的 subTree
         const { next, vnode } = instance
+        // 如果有 next 的话， 说明需要更新组件的数据（props，slots 等）
+        // 先更新组件的数据，然后更新完成后，在继续对比当前组件的子元素
         if(next) {
+            // 问题是 next 和 vnode 的区别是什么
             next.el = vnode.el
             updateComponentPreRender(instance, next)
         }
         const subTree = renderComponentRoot(instance)
+        // 替换之前的 subTree
         const prevSubTree = instance.subTree
         instance.subTree = subTree
+        // 用旧的 vnode 和新的 vnode 交给 patch 来处理
         patch(prevSubTree, subTree, container, instance, anchor)
       }
     }, {
