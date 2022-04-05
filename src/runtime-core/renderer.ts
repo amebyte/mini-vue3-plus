@@ -157,6 +157,10 @@ export function createRenderer(options) {
   }
 
   function updateComponentPreRender(instance, nextVNode) {
+    // 更新 nextVNode 的组件实例
+    // 现在 instance.vnode 是组件实例更新前的
+    // 所以之前的 props 就是基于 instance.vnode.props 来获取
+    // 接着需要更新 vnode ，方便下一次更新的时候获取到正确的值
     instance.vnode = nextVNode
     instance.next = null
     instance.props = nextVNode.props
