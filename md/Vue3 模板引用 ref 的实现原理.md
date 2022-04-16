@@ -101,3 +101,73 @@ const normalizeRef = ({
 ```
 
 我们可以看到normalizeRef函数最主要是把当前的渲染实例对象`currentRenderingInstance`保存起来了。
+
+### 模板引用的赋值
+
+我们在上面开头的时候已经说了，模板引用ref只会在初始渲染之后获得。那么具体在源码中的位置是patch函数的底部，也就是把虚拟DOM进行patch渲染之后，再设置模版引用ref。
+
+```javascript
+  function patch(n1, n2, container: any, parentComponent, anchor) {
+    // 基于 n2 的类型来判断
+    // 因为 n2 是新的 vnode
+    const { type, shapeFlag, ref } = n2
+
+    // Fragment => 只渲染 children
+    switch (type) {
+      // 其中还有几个类型比如： static fragment comment
+      case Fragment:
+        processFragment(n1, n2, container, parentComponent, anchor)
+        break
+      case Text:
+        processText(n1, n2, container)
+        break
+      default:
+          // 这里就基于 shapeFlag 来处理
+        if (shapeFlag & ShapeFlags.ELEMENT) {
+          // 处理 element
+          processElement(n1, n2, container, parentComponent, anchor)
+        } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+          // 处理 component
+          processComponent(n1, n2, container, parentComponent, anchor)
+        }
+        break
+    }
+
+    // 模板引用ref只会在初始渲染之后获得
+    if (ref != null && parentComponent) {
+        setRef(ref, n2 || n1, !n2)
+    }
+  }
+```
+
+我们再看看setRef函数中干了什么事情。
+
+```javascript
+export function setRef(
+    rawRef,
+    vnode,
+    isUnmount = false
+  ) {
+      
+    const refValue =
+    vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT
+      ? vnode.component!.proxy
+      : vnode.el
+    // 如果n2不存在则是卸载
+    const value = isUnmount ? null : refValue
+    // 把在创建虚拟DOM的时候设置保存的组件渲染实例解构出来
+    const { i: owner, r: ref } = rawRef
+
+    const setupState = owner.setupState
+    // happy path中我们只考虑最简单的情况
+    const _isString = isString(ref)
+
+    if (_isString) {
+        // 如果在对应于渲染上下文中存在ref键值，则 VNode 的相应元素或组件实例将被分配给该 ref 的值
+        if (hasOwn(setupState, ref)) {
+          setupState[ref] = value
+        }
+    }
+  }
+```
+
