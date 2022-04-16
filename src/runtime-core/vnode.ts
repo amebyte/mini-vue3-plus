@@ -16,7 +16,7 @@ const normalizeRef = ({
           : ref
         : null
     ) as any
-  }
+}
 
 export function createVNode(type, props?, children?) {
     const vnode = {
