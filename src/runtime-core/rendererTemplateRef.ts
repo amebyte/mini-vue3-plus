@@ -6,7 +6,7 @@ export function setRef(
     vnode,
     isUnmount = false
   ) {
-      
+    // 判断如果是组件实例，则把改组件实例作为ref的值，否则就是把该元素作为ref值 
     const refValue =
     vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT
       ? vnode.component!.proxy
