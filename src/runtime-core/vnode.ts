@@ -11,6 +11,7 @@ const normalizeRef = ({
   }) => {
     return (
       ref != null
+        // 从这里我们可以知道ref值可以是字符串，Ref数据，函数
         ? isString(ref) || isRef(ref) || isFunction(ref)
           ? { i: currentRenderingInstance, r: ref}
           : ref
