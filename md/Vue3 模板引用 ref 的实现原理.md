@@ -155,7 +155,7 @@ export function setRef(
       : vnode.el
     // 如果n2不存在则是卸载
     const value = isUnmount ? null : refValue
-    // 把在创建虚拟DOM的时候设置保存的组件渲染实例解构出来
+    // 把在创建虚拟DOM的时候设置保存的组件渲染实例和ref键值解构出来
     const { i: owner, r: ref } = rawRef
 
     const setupState = owner.setupState
@@ -171,3 +171,4 @@ export function setRef(
   }
 ```
 
+模版引用ref的赋值具体就是在setRef函数中实现的。判断如果是组件实例，则把改组件实例作为ref的值，否则就是把该元素作为ref值，再把在创建虚拟DOM的时候设置保存的组件渲染实例和ref键值解构出来，再判断如果在对应于渲染上下文中存在ref键值，则 VNode 的相应元素或组件实例将被分配给该 ref 的值。
