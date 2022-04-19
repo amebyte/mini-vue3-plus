@@ -1,5 +1,6 @@
 import { proxyRefs } from "../reactivity"
 import { shallowReadonly } from "../reactivity/reactive"
+import { EMPTY_OBJ } from "../shared"
 import { emit } from "./componentEmit"
 import { initProps } from "./componentProps"
 import { publicInstanceProxyHandlers } from "./componentPublicInstance"
@@ -15,6 +16,7 @@ export function createComponentInstance(vnode: any, parent) {
         setupState: {}, // 存储 setup 的返回值
         props: {},
         slots: {}, // 存放插槽的数据
+        refs: EMPTY_OBJ,
         provides: parent ? parent.provides : {}, // 获取 parent 的 provides 作为当前组件的初始化值 这样就可以继承 parent.provides 的属性了
         parent,
         isMounted: false,
