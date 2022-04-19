@@ -6,6 +6,8 @@ export const hasChange = (newVal, val) => {
     return !Object.is(newVal, val)
 }
 
+export const EMPTY_OBJ: { readonly [key: string]: any } = {}
+
 export const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key)
 
 export const camelize = (str: string) => {

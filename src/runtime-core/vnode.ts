@@ -7,13 +7,15 @@ export const Fragment = Symbol('Fragment')
 export const Text = Symbol('Text')
 
 const normalizeRef = ({
-    ref
+    ref,
+    ref_key,
+    ref_for,
   }) => {
     return (
       ref != null
         // 从这里我们可以知道ref值可以是字符串，Ref数据，函数
         ? isString(ref) || isRef(ref) || isFunction(ref)
-          ? { i: currentRenderingInstance, r: ref}
+          ? { i: currentRenderingInstance, r: ref, k: ref_key, f: !!ref_for}
           : ref
         : null
     ) as any

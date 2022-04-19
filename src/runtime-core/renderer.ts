@@ -50,7 +50,7 @@ export function createRenderer(options) {
 
     // 模板引用ref只会在初始渲染之后获得
     if (ref != null && parentComponent) {
-        setRef(ref, n2 || n1, !n2)
+        setRef(ref, n1 && n1.ref, n2 || n1, !n2)
     }
   }
 
