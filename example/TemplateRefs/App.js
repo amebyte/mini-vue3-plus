@@ -59,11 +59,11 @@ export const App = {
       const refHandler = () => {
       }
       nextTick(() => {
-          console.log('nextTickfooEl', fooEl, barEl)
+          console.log('fooEl', fooEl, 'barEl', barEl)
           refKey.value = 'bar'
       })
       nextTick(() => {
-        console.log('nextTickfooEl', fooEl, barEl)
+        console.log('fooEl', fooEl, 'barEl', barEl)
     })
       return {
         foo:fooEl,
