@@ -55,6 +55,7 @@ export function proxyRefs(objectWithRefs) {
         set(target, key, val) {
             if(isRef(target[key]) && !isRef(val)){
                 target[key].value = val
+                // 一定要显式地返回true，不然会报错
                 return true
             } else {
                return Reflect.set(target, key, val) 

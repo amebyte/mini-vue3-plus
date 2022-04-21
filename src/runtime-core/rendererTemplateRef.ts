@@ -7,7 +7,7 @@ export function setRef(
     oldRawRef,
     vnode,
     isUnmount = false
-  ) {
+  ) {console.log('setRef')
     // 判断如果是组件实例，则把改组件实例作为ref的值，否则就是把该元素作为ref值 
     const refValue =
     vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT
@@ -32,11 +32,11 @@ export function setRef(
         } else if (isRef(oldRef)) {
           oldRef.value = null
         }
-      }
+    }
 
     // happy path中我们只考虑最简单的情况
     const _isString = isString(ref)
-
+    console.log('setRef', ref)
     if (_isString) {
         console.log('rawRef', rawRef, ref)
         refs[ref] = value
@@ -44,5 +44,8 @@ export function setRef(
         if (hasOwn(setupState, ref)) {
           setupState[ref] = value
         }
+    } else if (isRef(ref)) {
+        ref.value = value
+        if (rawRef.k) refs[rawRef.k] = value
     }
   }
