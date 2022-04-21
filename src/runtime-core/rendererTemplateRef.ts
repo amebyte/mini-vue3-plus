@@ -22,6 +22,7 @@ export function setRef(
     const refs = owner.refs === EMPTY_OBJ ? (owner.refs = {}) : owner.refs
     const setupState = owner.setupState
 
+    // 动态ref,如果ref更改，就删除旧ref的值
     if (oldRef != null && oldRef !== ref) {
         if (isString(oldRef)) {
           refs[oldRef] = null
