@@ -6,7 +6,7 @@ import { renderComponentRoot } from './componentRenderUtils'
 import { shouldUpdateComponent } from './componentUpdateUtils'
 import { createAppAPI } from './createApp'
 import { setRef } from './rendererTemplateRef'
-import { queueJobs } from './scheduler'
+import { queueJobs, queuePostFlushCb } from './scheduler'
 import { Fragment, Text } from './vnode'
 
 export function createRenderer(options) {
@@ -109,6 +109,7 @@ export function createRenderer(options) {
     // 触发依赖
     instance.update = effect(() => {
       if (!instance.isMounted) {
+        const { m } = instance
         // 组件初始化的时候会执行这里
         // 为什么要在这里调用 render 函数呢
         // 是因为在 effect 内调用 render 才能触发依赖收集
@@ -128,6 +129,9 @@ export function createRenderer(options) {
         // 把 root element 赋值给 组件的vnode.el ，为后续调用 $el 的时候获取值
         instance.vnode.el = subTree.el // 这样显式赋值会不会好理解一点呢
         instance.isMounted = true
+        if(m) {
+            queuePostFlushCb(m)
+        }
       } else {
         // 响应式的值变更后会从这里执行逻辑
         // 主要就是拿到新的 vnode ，然后和之前的 vnode 进行对比

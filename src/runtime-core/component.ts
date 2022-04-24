@@ -6,7 +6,7 @@ import { initProps } from "./componentProps"
 import { publicInstanceProxyHandlers } from "./componentPublicInstance"
 import { initSlots } from "./componentSlots"
 
-let currentInstance = null
+export let currentInstance = null
 
 export const enum LifecycleHooks {
     BEFORE_CREATE = 'bc',
