@@ -18,7 +18,7 @@ export const App = {
     setup() {
       
         onMounted(() => {
-            console.log('onMounted')
+            console.log('onMounted by coboy')
         })
 
       nextTick(() => {
