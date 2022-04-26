@@ -1,5 +1,5 @@
 import { effect } from '../reactivity/effect'
-import { isObject } from '../shared'
+import { invokeArrayFns, isObject } from '../shared'
 import { ShapeFlags } from '../shared/ShapeFlags'
 import { createComponentInstance, setupComponent } from './component'
 import { renderComponentRoot } from './componentRenderUtils'
@@ -109,7 +109,11 @@ export function createRenderer(options) {
     // 触发依赖
     instance.update = effect(() => {
       if (!instance.isMounted) {
-        const { m } = instance
+        const { bm, m } = instance
+        // beforeMount hook
+        if (bm) {
+            invokeArrayFns(bm)
+        }
         // 组件初始化的时候会执行这里
         // 为什么要在这里调用 render 函数呢
         // 是因为在 effect 内调用 render 才能触发依赖收集

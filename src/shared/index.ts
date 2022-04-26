@@ -27,3 +27,10 @@ export const toHandlerKey = (str: string) => {
 export const isFunction = (val: unknown): val is Function =>
   typeof val === 'function'
 export const isString = (val: unknown): val is string => typeof val === 'string'
+
+export const invokeArrayFns = (fns: Function[], arg?: any) => {
+    for (let i = 0; i < fns.length; i++) {
+      fns[i](arg)
+    }
+}
+  
