@@ -89,3 +89,7 @@ export function getCurrentInstance() {
 export function setCurrentInstance(instance) {
     currentInstance = instance
 }
+
+export function unsetCurrentInstance() {
+    currentInstance = null
+}

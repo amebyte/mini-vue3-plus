@@ -141,7 +141,7 @@ export function createRenderer(options) {
         // 主要就是拿到新的 vnode ，然后和之前的 vnode 进行对比
 
         // 拿到最新的 subTree
-        const { next, vnode } = instance
+        const { bu, u, next, vnode } = instance
         // 如果有 next 的话， 说明需要更新组件的数据（props，slots 等）
         // 先更新组件的数据，然后更新完成后，在继续对比当前组件的子元素
         if(next) {
@@ -149,12 +149,23 @@ export function createRenderer(options) {
             next.el = vnode.el
             updateComponentPreRender(instance, next)
         }
+
+        // beforeUpdate hook
+        if (bu) {
+            invokeArrayFns(bu)
+        }
+
         const subTree = renderComponentRoot(instance)
         // 替换之前的 subTree
         const prevSubTree = instance.subTree
         instance.subTree = subTree
         // 用旧的 vnode 和新的 vnode 交给 patch 来处理
         patch(prevSubTree, subTree, container, instance, anchor)
+
+        // updated hook
+        if (u) {
+            queuePostFlushCb(u)
+        }
       }
     }, {
         scheduler() {

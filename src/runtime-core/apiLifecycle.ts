@@ -1,4 +1,4 @@
-import { currentInstance, LifecycleHooks } from "./component"
+import { currentInstance, LifecycleHooks, setCurrentInstance, unsetCurrentInstance } from "./component"
 
 // injectHook是一个闭包函数，通过闭包保存当前生命周期Hooks在哪个组件实例上
 export function injectHook(type, hook, target) {
@@ -12,9 +12,10 @@ export function injectHook(type, hook, target) {
           if (target.isUnmounted) {
             return
           }
+            setCurrentInstance(target)
             // 执行生命周期Hooks函数
             const  res = args ? hook(...args) : hook()
-
+            unsetCurrentInstance()
           return res
         })
 
@@ -30,4 +31,8 @@ export const createHook = (lifecycle) => (hook, target = currentInstance) => inj
 
 export const onBeforeMount = createHook(LifecycleHooks.BEFORE_MOUNT)
 export const onMounted = createHook(LifecycleHooks.MOUNTED)
+export const onBeforeUpdate = createHook(LifecycleHooks.BEFORE_UPDATE)
+export const onUpdated = createHook(LifecycleHooks.UPDATED)
+export const onBeforeUnmount = createHook(LifecycleHooks.BEFORE_UNMOUNT)
+export const onUnmounted = createHook(LifecycleHooks.UNMOUNTED)
 
