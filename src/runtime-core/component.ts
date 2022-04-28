@@ -9,14 +9,14 @@ import { initSlots } from "./componentSlots"
 export let currentInstance = null
 
 export const enum LifecycleHooks {
-    BEFORE_CREATE = 'bc',
-    CREATED = 'c',
-    BEFORE_MOUNT = 'bm',
-    MOUNTED = 'm',
-    BEFORE_UPDATE = 'bu',
-    UPDATED = 'u',
-    BEFORE_UNMOUNT = 'bum',
-    UNMOUNTED = 'um',
+    BEFORE_CREATE = 'bc', // 创建之前
+    CREATED = 'c', // 创建
+    BEFORE_MOUNT = 'bm', // 挂载之前
+    MOUNTED = 'm', // 挂载之后
+    BEFORE_UPDATE = 'bu', // 更新之前
+    UPDATED = 'u', // 更新之后
+    BEFORE_UNMOUNT = 'bum', // 卸载之前
+    UNMOUNTED = 'um', // 卸载之后
     DEACTIVATED = 'da',
     ACTIVATED = 'a',
     RENDER_TRIGGERED = 'rtg',
