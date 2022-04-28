@@ -9,6 +9,9 @@ export function nextTick(fn) {
     return fn ? p.then(fn) : p
 }
 
+const getId = (job): number =>
+  job.id == null ? Infinity : job.id
+
 export function queueJobs(job) {
     if(!queue.includes(job)) {
         queue.push(job)
@@ -27,6 +30,8 @@ export function flushPostFlushCbs(seen?) {
       console.log('deduped', deduped, 'pendingPostFlushCbs', pendingPostFlushCbs)
       activePostFlushCbs = deduped
       console.log('activePostFlushCbs', activePostFlushCbs)
+      activePostFlushCbs.sort((a, b) => getId(a) - getId(b))
+      
       for (
         postFlushIndex = 0;
         postFlushIndex < activePostFlushCbs.length;

@@ -17,9 +17,17 @@ export const App = {
     },
     setup() {
       
-        onMounted(() => {
+        const mount1 = () => {
             console.log('onMounted by coboy')
-        })
+        }
+        mount1.id = 2
+        onMounted(mount1)
+
+        const mount2 = () => {
+            console.log('onMounted by coboy222')
+        }
+        mount2.id = 1
+        onMounted(mount2)
 
       nextTick(() => {
         //   console.log('refKey', refKey)
