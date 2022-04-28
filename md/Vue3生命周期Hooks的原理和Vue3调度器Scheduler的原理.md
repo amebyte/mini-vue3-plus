@@ -1,4 +1,4 @@
-# Vue3生命周期Hooks的原理和Vue3调度器Scheduler原理 
+# Vue3生命周期Hooks的原理和Vue3调度器Scheduler的原理 
 ### 写在最前：本文章的目标
 Vue3的生命周期的实现原理是比较简单的，但要理解整个Vue3的生命周期则还要结合整个Vue的运行原理，又因为Vue3的一些生命周期的执行机制是通过Vue3的调度器Scheduler来完成的，所以想要彻底了解Vue3的生命周期原理还必须要结合Vue3的调度器Scheduler的实现原理来理解。同时通过对Vue3的调度器Scheduler的理解，从而加深对Vue底层的一些设计原理和规则的理解，所以本文章的目标是理解Vue3生命周期Hooks的原理以及通过Vue3生命周期Hooks的运行了解Vue3调度器Scheduler的原理。
 
@@ -81,8 +81,8 @@ export function injectHook(type, hook, target) {
 
 
 
-### 谈谈对Hooks的理解
-
+### Hooks的本质
+Vue的Hooks设计是从React的Hooks那里借鉴过来的，React官方对Hooks的定义是：Hooks 是一种函数，该函数允许您从函数式组件 “勾住(hook into)” React 状态和生命周期功能。
 
 ### Vue3调度器Scheduler原理 
 
