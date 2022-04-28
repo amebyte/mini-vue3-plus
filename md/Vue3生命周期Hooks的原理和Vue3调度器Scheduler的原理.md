@@ -78,7 +78,83 @@ export function injectHook(type, hook, target) {
     }
 }
 ```
+#### 生命周期Hooks的调用
+
+```javascript
+instance.update = effect(() => {
+    if (!instance.isMounted) {
+        const { bm, m } = instance
+        // 生命周期：beforeMount hook
+        if (bm) {
+            invokeArrayFns(bm)
+        }
+        // 组件初始化的时候会执行这里
+        // 为什么要在这里调用 render 函数呢
+        // 是因为在 effect 内调用 render 才能触发依赖收集
+        // 等到后面响应式的值变更后会再次触发这个函数  
+        const subTree = (instance.subTree = renderComponentRoot(instance))
+        patch(null, subTree, container, instance, anchor)
+        instance.vnode.el = subTree.el 
+        instance.isMounted = true
+        // 生命周期：mounted
+        if(m) {
+            // mounted需要通过Scheduler的函数来调用
+            queuePostFlushCb(m)
+        }
+    } else {
+        // 响应式的值变更后会从这里执行逻辑
+        // 主要就是拿到新的 vnode ，然后和之前的 vnode 进行对比
+
+        // 拿到最新的 subTree
+        const { bu, u, next, vnode } = instance
+        // 如果有 next 的话， 说明需要更新组件的数据（props，slots 等）
+        // 先更新组件的数据，然后更新完成后，在继续对比当前组件的子元素
+        if(next) {
+            next.el = vnode.el
+            updateComponentPreRender(instance, next)
+        }
+
+        // 生命周期：beforeUpdate hook
+        if (bu) {
+            invokeArrayFns(bu)
+        }
+
+        const subTree = renderComponentRoot(instance)
+        // 替换之前的 subTree
+        const prevSubTree = instance.subTree
+        instance.subTree = subTree
+        // 用旧的 vnode 和新的 vnode 交给 patch 来处理
+        patch(prevSubTree, subTree, container, instance, anchor)
+
+        // 生命周期：updated hook
+        if (u) {
+            // updated 需要通过Scheduler的函数来调用
+            queuePostFlushCb(u)
+        }
+    }
+}, {
+    scheduler() {
+        queueJobs(instance.update)
+    }
+})
+```
+
+invokeArrayFns函数
+
+beforeMount和beforeUpdate是同步执行的，都是通过invokeArrayFns来调用的。
+
+```javascript
+export const invokeArrayFns = (fns: Function[], arg?: any) => {
+  for (let i = 0; i < fns.length; i++) {
+    fns[i](arg)
+  }
+}
+```
+
+组件挂载和更新则是异步的，需要通过Scheduler来处理。
+
 ### Hooks的本质
+
 Vue的Hooks设计是从React的Hooks那里借鉴过来的，React的Hooks的本质就是把状态变量、副作用函数存到函数组件的fiber对象上，等到将来状态变量发生改变的时候，相关的函数组件fiber就重新进行更新。Vue3这边的实现原理也类似，通过上面的生命周期的Hooks实现原理，我们可以知道Vue3的生命周期的Hooks是绑定到具体的组件实例上，而状态变量，则因为Vue的变量是响应式的，状态变量会通过effect和具体的组件更新函数进行依赖收集，然后进行绑定，将来状态变量发生改变的时候，相应的组件更新函数会重新进行执行。
 
 所以Hooks的本质就是让那些状态变量或生命周期函数和组件绑定起来，组件运行到相应时刻执行相应绑定的生命周期函数，那些绑定的变量发生改变的时候，相应的组件也重新进行更新。
