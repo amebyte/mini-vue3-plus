@@ -1,5 +1,4 @@
-import { h, ref, nextTick } from '../../lib/mini-vue.esm.js'
-import { Foo } from './Foo.js'
+import { h, ref, nextTick, onMounted } from '../../lib/mini-vue.esm.js'
 
 const refKey = ref()
 // string
@@ -12,15 +11,18 @@ export const App = {
           ref: refKey
         },
         [
-          h(Foo, { })
+          h('h3', { }, 'coboy')
         ]
       )
     },
     setup() {
       
+        onMounted(() => {
+            console.log('onMounted by coboy')
+        })
 
       nextTick(() => {
-          console.log('refKey', refKey)
+        //   console.log('refKey', refKey)
       })
 
       return {

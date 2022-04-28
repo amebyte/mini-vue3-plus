@@ -6,6 +6,8 @@ export const hasChange = (newVal, val) => {
     return !Object.is(newVal, val)
 }
 
+export const EMPTY_OBJ: { readonly [key: string]: any } = {}
+
 export const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key)
 
 export const camelize = (str: string) => {
@@ -25,3 +27,10 @@ export const toHandlerKey = (str: string) => {
 export const isFunction = (val: unknown): val is Function =>
   typeof val === 'function'
 export const isString = (val: unknown): val is string => typeof val === 'string'
+
+export const invokeArrayFns = (fns: Function[], arg?: any) => {
+    for (let i = 0; i < fns.length; i++) {
+      fns[i](arg)
+    }
+}
+  

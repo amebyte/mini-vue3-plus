@@ -40,7 +40,7 @@ export function ref(value) {
 }
 
 export function isRef(ref) {
-    return !!ref._v_isRef
+    return ref && !!ref._v_isRef
 }
 
 export function unRef(ref) {
@@ -54,7 +54,9 @@ export function proxyRefs(objectWithRefs) {
         },
         set(target, key, val) {
             if(isRef(target[key]) && !isRef(val)){
-                return target[key].value = val
+                target[key].value = val
+                // 一定要显式地返回true，不然会报错
+                return true
             } else {
                return Reflect.set(target, key, val) 
             }

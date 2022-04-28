@@ -1,11 +1,29 @@
 import { proxyRefs } from "../reactivity"
 import { shallowReadonly } from "../reactivity/reactive"
+import { EMPTY_OBJ } from "../shared"
 import { emit } from "./componentEmit"
 import { initProps } from "./componentProps"
 import { publicInstanceProxyHandlers } from "./componentPublicInstance"
 import { initSlots } from "./componentSlots"
 
-let currentInstance = null
+export let currentInstance = null
+
+export const enum LifecycleHooks {
+    BEFORE_CREATE = 'bc', // 创建之前
+    CREATED = 'c', // 创建
+    BEFORE_MOUNT = 'bm', // 挂载之前
+    MOUNTED = 'm', // 挂载之后
+    BEFORE_UPDATE = 'bu', // 更新之前
+    UPDATED = 'u', // 更新之后
+    BEFORE_UNMOUNT = 'bum', // 卸载之前
+    UNMOUNTED = 'um', // 卸载之后
+    DEACTIVATED = 'da',
+    ACTIVATED = 'a',
+    RENDER_TRIGGERED = 'rtg',
+    RENDER_TRACKED = 'rtc',
+    ERROR_CAPTURED = 'ec',
+    SERVER_PREFETCH = 'sp'
+}
 
 export function createComponentInstance(vnode: any, parent) {
     let component = {
@@ -15,11 +33,13 @@ export function createComponentInstance(vnode: any, parent) {
         setupState: {}, // 存储 setup 的返回值
         props: {},
         slots: {}, // 存放插槽的数据
+        refs: EMPTY_OBJ,
         provides: parent ? parent.provides : {}, // 获取 parent 的 provides 作为当前组件的初始化值 这样就可以继承 parent.provides 的属性了
         parent,
         isMounted: false,
         subTree: {},
-        emit: () => {}
+        emit: () => {},
+        m: null,
     }
     component.emit = emit.bind(null, component) as any
     return component
@@ -68,4 +88,8 @@ export function getCurrentInstance() {
 
 export function setCurrentInstance(instance) {
     currentInstance = instance
+}
+
+export function unsetCurrentInstance() {
+    currentInstance = null
 }

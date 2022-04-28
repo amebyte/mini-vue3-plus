@@ -1,12 +1,12 @@
 import { effect } from '../reactivity/effect'
-import { isObject } from '../shared'
+import { invokeArrayFns, isObject } from '../shared'
 import { ShapeFlags } from '../shared/ShapeFlags'
 import { createComponentInstance, setupComponent } from './component'
 import { renderComponentRoot } from './componentRenderUtils'
 import { shouldUpdateComponent } from './componentUpdateUtils'
 import { createAppAPI } from './createApp'
 import { setRef } from './rendererTemplateRef'
-import { queueJobs } from './scheduler'
+import { queueJobs, queuePostFlushCb } from './scheduler'
 import { Fragment, Text } from './vnode'
 
 export function createRenderer(options) {
@@ -47,10 +47,10 @@ export function createRenderer(options) {
         }
         break
     }
-
+    console.log('refxxx', ref)
     // 模板引用ref只会在初始渲染之后获得
     if (ref != null && parentComponent) {
-        setRef(ref, n2 || n1, !n2)
+        setRef(ref, n1 && n1.ref, n2 || n1, !n2)
     }
   }
 
@@ -109,6 +109,11 @@ export function createRenderer(options) {
     // 触发依赖
     instance.update = effect(() => {
       if (!instance.isMounted) {
+        const { bm, m } = instance
+        // beforeMount hook
+        if (bm) {
+            invokeArrayFns(bm)
+        }
         // 组件初始化的时候会执行这里
         // 为什么要在这里调用 render 函数呢
         // 是因为在 effect 内调用 render 才能触发依赖收集
@@ -128,12 +133,15 @@ export function createRenderer(options) {
         // 把 root element 赋值给 组件的vnode.el ，为后续调用 $el 的时候获取值
         instance.vnode.el = subTree.el // 这样显式赋值会不会好理解一点呢
         instance.isMounted = true
+        if(m) {
+            queuePostFlushCb(m)
+        }
       } else {
         // 响应式的值变更后会从这里执行逻辑
         // 主要就是拿到新的 vnode ，然后和之前的 vnode 进行对比
 
         // 拿到最新的 subTree
-        const { next, vnode } = instance
+        const { bu, u, next, vnode } = instance
         // 如果有 next 的话， 说明需要更新组件的数据（props，slots 等）
         // 先更新组件的数据，然后更新完成后，在继续对比当前组件的子元素
         if(next) {
@@ -141,12 +149,23 @@ export function createRenderer(options) {
             next.el = vnode.el
             updateComponentPreRender(instance, next)
         }
+
+        // beforeUpdate hook
+        if (bu) {
+            invokeArrayFns(bu)
+        }
+
         const subTree = renderComponentRoot(instance)
         // 替换之前的 subTree
         const prevSubTree = instance.subTree
         instance.subTree = subTree
         // 用旧的 vnode 和新的 vnode 交给 patch 来处理
         patch(prevSubTree, subTree, container, instance, anchor)
+
+        // updated hook
+        if (u) {
+            queuePostFlushCb(u)
+        }
       }
     }, {
         scheduler() {
