@@ -139,9 +139,10 @@ instance.update = effect(() => {
 })
 ```
 
+上面这个是Vue3组件实例化之后，通过effect包装一个更新的副作用函数来和响应式数据进行依赖收集。在这个副作用函数里面有两个分支，第一个是组件挂载之前执行的，也就是生命周期函数beforeMount和mount调用的地方，第二个分支是组件挂载之后更新的时候执行的，在这里就是生命周期函数beforeUpdate和updated调用的地方。
+具体就是在挂载之前，还没生成虚拟DOM之前就执行beforeMount函数，之后则去生成虚拟DOM经过patch之后，组件已经被挂载到页面上了，也就是页面上显示视图了，这个时候就去执行mount函数;在更新的时候，还没获取更新之后的虚拟DOM之前执行beforeUpdate，然后去获取更新之后的虚拟DOM，然后再去patch，更新视图，之后就执行updated。
+需要注意的是beforeMount和beforeUpdate是同步执行的，都是通过invokeArrayFns来调用的。
 invokeArrayFns函数
-
-beforeMount和beforeUpdate是同步执行的，都是通过invokeArrayFns来调用的。
 
 ```javascript
 export const invokeArrayFns = (fns: Function[], arg?: any) => {
