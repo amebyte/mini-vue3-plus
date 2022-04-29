@@ -27,9 +27,7 @@ export function flushPostFlushCbs(seen?) {
     if (pendingPostFlushCbs.length) {
       const deduped = [...new Set(pendingPostFlushCbs)]
       pendingPostFlushCbs.length = 0
-      console.log('deduped', deduped, 'pendingPostFlushCbs', pendingPostFlushCbs)
       activePostFlushCbs = deduped
-      console.log('activePostFlushCbs', activePostFlushCbs)
       activePostFlushCbs.sort((a, b) => getId(a) - getId(b))
       
       for (
@@ -48,9 +46,7 @@ function queueCb(
     cb,
     pendingQueue
   ) {
-      console.log('cb', cb)
     pendingQueue.push(...cb)
-    console.log('pendingQueue', pendingQueue, 'pendingPostFlushCbs', pendingPostFlushCbs)
     queueFlush()
   }
 
@@ -65,6 +61,7 @@ function flushJobs(seen?) {
     // 组件更新前队列执行
     // flushPreFlushCbs(seen)
     try{
+        queue.sort((a, b) => getId(a) - getId(b))
         // 组件更新队列执行
         let job
         while (job = queue.shift()) {
