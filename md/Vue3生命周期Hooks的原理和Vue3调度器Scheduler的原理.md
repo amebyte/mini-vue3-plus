@@ -158,7 +158,7 @@ export const invokeArrayFns = (fns: Function[], arg?: any) => {
 在Vue3的一些API，例如：组件的生命周期API、watch API、组件更新的回调函数都不是立即执行的，而是放到异步任务队列里面，然后按一定的规则进行执行的，比如说任务队列里面同时存在，watch的任务，组件更新的任务，生命周期的任务，它的执行顺序是怎么样的呢？这个就是由调度器的调度算法决定，同时调度算法只调度执行的顺序，不负责具体的执行。这样设计的好处就是即便将来Vue3增加新的异步回调API，也不需要修改调度算法，可以极大的减少 Vue API 和 队列间耦合。
 Vue3的Scheduler提供了三个入列方式的API：
 
-queuePreFlushCb API: 加入 Pre 队列 
+queuePreFlushCb API: 加入 Pre 队列 组件更新前执行
 
 ```javascript
 export function queuePreFlushCb(cb: SchedulerJob) {
@@ -166,7 +166,7 @@ export function queuePreFlushCb(cb: SchedulerJob) {
 }
 ```
 
-queueJob API: 加入 queue 队列 
+queueJob API: 加入 queue 队列 组件更新执行
 
 ```javascript
 export function queueJob(job: SchedulerJob) {
@@ -174,14 +174,42 @@ export function queueJob(job: SchedulerJob) {
 }
 ```
 
-queuePostFlushCb API: 加入 Post 队列 
+queuePostFlushCb API: 加入 Post 队列 组件更新后执行
 
 ```javascript
 export function queuePostFlushCb(cb: SchedulerJobs) {
   queueCb(cb, activePostFlushCbs, pendingPostFlushCbs, postFlushIndex)
 }
 ```
+由于Vue3只提供了入列方式的API并没有提供出列方式的API，所以我们只能控制何时入列，而何时出列则由Vue3调度器本身控制。
 
+那么Vue3调度器如何控制出列方式呢？其实也很简单。
+
+```javascript
+function flushJobs(seen?) {
+    isFlushPending = false
+    // 组件更新前队列执行
+    flushPreFlushCbs(seen)
+    try{
+        // 组件更新队列执行
+        let job
+        while (job = queue.shift()) {
+            job && job()
+        }
+    } finally {
+        // 组件更新后队列执行
+        flushPostFlushCbs(seen)
+        // 如果在执行异步任务的过程中又产生了新的队列，那么则继续回调执行
+        if (
+            queue.length ||
+            pendingPreFlushCbs.length ||
+            pendingPostFlushCbs.length
+        ) {
+            flushJobs(seen)
+        }
+    }
+}
+```
 
 
 

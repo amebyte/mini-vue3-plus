@@ -62,12 +62,25 @@ function queueFlush() {
 
 function flushJobs(seen?) {
     isFlushPending = false
+    // 组件更新前队列执行
+    // flushPreFlushCbs(seen)
     try{
+        // 组件更新队列执行
         let job
         while (job = queue.shift()) {
             job && job()
         }
     } finally {
+        // 组件更新后队列执行
         flushPostFlushCbs(seen)
+
+        // 如果在执行异步任务的过程中又产生了新的队列，那么则继续回调执行
+        if (
+            queue.length ||
+            // pendingPreFlushCbs.length ||
+            pendingPostFlushCbs.length
+        ) {
+            flushJobs(seen)
+        }
     }
 }
