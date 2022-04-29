@@ -1,6 +1,6 @@
-# Vue3生命周期Hooks的原理和Vue3调度器Scheduler的原理 
+# Vue3生命周期Hooks的原理和Vue3调度器(Scheduler)的原理 
 ### 写在最前：本文章的目标
-Vue3的生命周期的实现原理是比较简单的，但要理解整个Vue3的生命周期则还要结合整个Vue的运行原理，又因为Vue3的一些生命周期的执行机制是通过Vue3的调度器Scheduler来完成的，所以想要彻底了解Vue3的生命周期原理还必须要结合Vue3的调度器Scheduler的实现原理来理解。同时通过对Vue3的调度器Scheduler的理解，从而加深对Vue底层的一些设计原理和规则的理解，所以本文章的目标是理解Vue3生命周期Hooks的原理以及通过Vue3生命周期Hooks的运行了解Vue3调度器Scheduler的原理。
+Vue3的生命周期的实现原理是比较简单的，但要理解整个Vue3的生命周期则还要结合整个Vue的运行原理，又因为Vue3的一些生命周期的执行机制是通过Vue3的调度器来完成的，所以想要彻底了解Vue3的生命周期原理还必须要结合Vue3的调度器的实现原理来理解。同时通过对Vue3的调度器的理解，从而加深对Vue底层的一些设计原理和规则的理解，所以本文章的目标是理解Vue3生命周期Hooks的原理以及通过Vue3生命周期Hooks的运行了解Vue3调度器(Scheduler)的原理。
 
 ### Vue3生命周期的实现原理
 Vue3的生命周期Hooks函数的实现原理还是比较简单的，就是把各个生命周期的函数挂载或者叫注册到组件的实例上，然后等到组件运行到某个时刻，再去组件实例上把相应的生命周期的函数取出来执行。
@@ -154,14 +154,45 @@ export const invokeArrayFns = (fns: Function[], arg?: any) => {
 
 组件挂载和更新则是异步的，需要通过Scheduler来处理。
 
-### Vue3调度器Scheduler原理 
+### Vue3调度器(Scheduler)原理 
+在Vue3的一些API，例如：组件的生命周期API、watch API、组件更新的回调函数都不是立即执行的，而是放到异步任务队列里面，然后按一定的规则进行执行的，比如说任务队列里面同时存在，watch的任务，组件更新的任务，生命周期的任务，它的执行顺序是怎么样的呢？这个就是由调度器的调度算法决定，同时调度算法只调度执行的顺序，不负责具体的执行。这样设计的好处就是即便将来Vue3增加新的异步回调API，也不需要修改调度算法，可以极大的减少 Vue API 和 队列间耦合。
+Vue3的Scheduler提供了三个入列方式的API：
+
+queuePreFlushCb API: 加入 Pre 队列 
+
+```javascript
+export function queuePreFlushCb(cb: SchedulerJob) {
+  queueCb(cb, activePreFlushCbs, pendingPreFlushCbs, preFlushIndex)
+}
+```
+
+queueJob API: 加入 queue 队列 
+
+```javascript
+export function queueJob(job: SchedulerJob) {
+
+}
+```
+
+queuePostFlushCb API: 加入 Post 队列 
+
+```javascript
+export function queuePostFlushCb(cb: SchedulerJobs) {
+  queueCb(cb, activePostFlushCbs, pendingPostFlushCbs, postFlushIndex)
+}
+```
+
+
+
+
+### Vue父子组件的生命周期的执行顺序
+
 
 ### Hooks的本质
+最后探讨一下Hooks的本质
 
 Vue的Hooks设计是从React的Hooks那里借鉴过来的，React的Hooks的本质就是把状态变量、副作用函数存到函数组件的fiber对象上，等到将来状态变量发生改变的时候，相关的函数组件fiber就重新进行更新。Vue3这边的实现原理也类似，通过上面的生命周期的Hooks实现原理，我们可以知道Vue3的生命周期的Hooks是绑定到具体的组件实例上，而状态变量，则因为Vue的变量是响应式的，状态变量会通过effect和具体的组件更新函数进行依赖收集，然后进行绑定，将来状态变量发生改变的时候，相应的组件更新函数会重新进行执行。
 
 所以Hooks的本质就是让那些状态变量或生命周期函数和组件绑定起来，组件运行到相应时刻执行相应绑定的生命周期函数，那些绑定的变量发生改变的时候，相应的组件也重新进行更新。
-
-### Vue父子组件的生命周期的执行顺序
 
 
