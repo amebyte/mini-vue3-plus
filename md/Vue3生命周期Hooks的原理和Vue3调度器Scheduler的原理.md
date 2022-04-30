@@ -222,7 +222,65 @@ function flushJobs(seen?) {
 
 #### 父子组件生命周期的执行顺序
 
-父子组件生命周期的执行顺序是在父子组件的执行顺序下通过调度算法按Vue的规则进行执行的。首先父组件先实例化进行执行，通过上面的生命周期的调用说明，我们可以知道，父组件在更新函数update第一次执行，也就是组件初始化的时候，先执行父组件的beforeMount，然后去获取父组件的虚拟DOM，然后在patch的过程中遇到虚拟节点是组件类型的时候，就又会去走组件初始化的流程，这个时候其实就是子组件初始化，那么之后子组件也需要走一遍组件的所有流程，子组件在更新update第一次执行的时候，先执行子组件的beforeMount，再去获取子组件的虚拟DOM，然后patch子组件的虚拟DOM，如果过程中又遇到节点是组件类型的话，又去走一遍组件初始化的流程，直到子组件patch完成，然后执行子组件的mount生命周期函数，接着回到父组件的执行栈，执行父组件的mount生命周期。
+父子组件生命周期的执行顺序是在父子组件的执行顺序下通过调度算法按Vue的规则进行执行的。首先父组件先实例化进行执行，通过上面的生命周期的调用说明，我们可以知道，父组件在更新函数update第一次执行，也就是组件初始化的时候，先执行父组件的beforeMount，然后去获取父组件的虚拟DOM，然后在patch的过程中遇到虚拟节点是组件类型的时候，就又会去走组件初始化的流程，这个时候其实就是子组件初始化，那么之后子组件也需要走一遍组件的所有流程，子组件在更新update第一次执行的时候，先执行子组件的beforeMount，再去获取子组件的虚拟DOM，然后patch子组件的虚拟DOM，如果过程中又遇到节点是组件类型的话，又去走一遍组件初始化的流程，直到子组件patch完成，然后执行子组件的mounted生命周期函数，接着回到父组件的执行栈，执行父组件的mounted生命周期。
+
+所以在初始化创建的时候，是深度递归创建子组件的过程，父子组件的生命周期的执行顺序是：
+
+1. 父组件 -> beforeMount
+2. 子组件 -> beforeMount
+3. 子组件 -> mounted
+4. 父组件 -> mounted
+
+父子组件更新顺序同样是深度递归执行的过程：
+
+1. 如果父子组件没通过props传递数据，那么更新的时候，就各自执行各自的更新生命周期函数。
+2. 如果父子组件存在通过props传递数据的话，就必须先更新父组件，才能更新子组件。因为父组件 DOM 更新前，需要修改子组件的 props，子组件的 props 才是正确的值。
+
+下面我们来看源码
+
+```javascript
+if (next) {
+    next.el = vnode.el
+    // 在组件更新前，先更新一些数据
+    updateComponentPreRender(instance, next, optimized)
+} else {
+    next = vnode
+}
+```
+
+例如更新props,更新slots
+
+```javascript
+  const updateComponentPreRender = (
+    instance: ComponentInternalInstance,
+    nextVNode: VNode,
+    optimized: boolean
+  ) => {
+    nextVNode.component = instance
+    const prevProps = instance.vnode.props
+    instance.vnode = nextVNode
+    instance.next = null
+    // 更新props
+    updateProps(instance, nextVNode.props, prevProps, optimized)
+    // 更新slots
+    updateSlots(instance, nextVNode.children, optimized)
+	// ...
+  }
+```
+
+所以在父子组件更新的时候，父子组件的生命周期执行顺序是：
+
+1. 父组件 -> beforeUpdate 
+2. 子组件 -> beforeUpdate
+3. 子组件 -> updated
+4. 父组件 -> updated
+
+同样卸载的时候父子组件也是深度递归遍历执行的过程：
+
+1. 父组件 -> beforeUnmount 
+2. 子组件 -> beforeUnmount 
+3. 子组件 -> unmounted
+4. 父组件 -> unmounted
 
 
 ### Hooks的本质

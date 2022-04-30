@@ -1,9 +1,15 @@
-import { h, ref } from "../../lib/mini-vue.esm.js";
+import { h, ref, onUpdated, onBeforeUpdate } from "../../lib/mini-vue.esm.js";
 import Child from "./Child.js";
 
 export const App = {
   name: "App",
   setup() {
+    onBeforeUpdate(() => {
+        console.log('onBeforeUpdate by parent')
+    })
+    onUpdated(() => {
+        console.log('onUpdated by parent')
+    })
     const msg = ref("123");
     const count = ref(1);
 
@@ -32,6 +38,7 @@ export const App = {
       ),
       h(Child, {
         msg: this.msg,
+        count: this.count
       }),
       h(
         "button",
