@@ -351,6 +351,91 @@ export function invalidateJob(job: SchedulerJob) {
 
 ### 父子组件执行顺序与调度器的关系
 
+假设有有这样一个场景，有一对父子组件，子组件使用watch API监听某个子组件的响应式数据发生改变之后，然后去修改了N个父组件的响应式数据。那么N个父组件的更新函数都将被放到调度器的任务队列中等待执行。这种情况调度器怎么确保最顶层的父组件的更新函数最先执行呢？
+
+我们先看看调度器的任务队列里的Job的数据结构
+
+```javascript
+export interface SchedulerJob extends Function {
+  id?: number  // 用于对队列中的 job 进行排序，id 小的先执行
+  active?: boolean
+  computed?: boolean
+  allowRecurse?: boolean 
+  ownerInstance?: ComponentInternalInstance	
+}
+```
+
+Job是一个函数，并且带有一些属性。其中id，表示优先级，用于实现队列插队，id 小的先执行,active通过上文我们可以知道active表示 Job 是否有效，失效的 Job 不执行，如组件卸载会导致 Job 失效。
+
+调度器任务队列的数据结构
+
+```javascript
+const queue: SchedulerJob[] = []
+```
+
+是一个数组
+
+调度器任务队列的执行
+
+```javascript
+// 按任务id大小排序
+queue.sort((a, b) => getId(a) - getId(b))
+try {
+    for (flushIndex = 0; flushIndex < queue.length; flushIndex++) {
+        const job = queue[flushIndex]
+        if (job && job.active !== false) {
+            // 使用带有 Vue 内部的错误处理函数执行job
+            callWithErrorHandling(job, null, ErrorCodes.SCHEDULER)
+        }
+    }
+} finally {
+    // 清空 queue 队列
+    flushIndex = 0
+    queue.length = 0
+}
+```
+
+那么又怎么确保父组件的更新函数的任务id是最小的呢？
+
+通过查看源码我们可以看在创建组件实例的createComponentInstance函数中有一个uid的属性，并且它的初始值为0，后续则++
+
+```javascript
+let uid = 0 // 初始化为0
+export function createComponentInstance(
+  vnode
+  parent
+  suspense
+) {
+  const instance: ComponentInternalInstance = {
+    uid: uid++,
+   // ...   
+  }
+```
+
+然后在创建组件更新函数的时候可以看到，组件更新函数的id就是该组件实例的uid
+
+```javascript
+const update = (instance.update = effect.run.bind(effect) as SchedulerJob)
+update.id = instance.uid
+```
+
+组件创建的过程是深度递归创建子组件的过程，所以最先的父组件是0，后面的子组件则一路++上去，这样就确保了子组件的更新函数的任务id是一定大于父组件更新函数的id的。所以当调度器的任务队列里面同时存在很多组件的更新函数的时候，通过优先级排序，就可以确保一定父组件的更新函数最先执行了。
+
+当前中途也可以进行插队
+
+```javascript
+export function queueJob(job: SchedulerJob) {
+	// 没有id的则push到最后
+    if (job.id == null) {
+      queue.push(job)
+    } else {
+      // 进行插队处理
+      queue.splice(findInsertionIndex(job.id), 0, job)
+    }
+    queueFlush()
+}
+```
+
 
 
 
