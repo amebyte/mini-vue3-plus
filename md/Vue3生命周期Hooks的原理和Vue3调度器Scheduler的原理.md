@@ -282,9 +282,58 @@ if (next) {
 3. 子组件 -> unmounted
 4. 父组件 -> unmounted
 
-组件卸载的时候，是在卸载些什么呢？
+### 组件卸载的时候，是在卸载些什么呢？
 
 组件卸载的时候主要是卸载模版引用，清除effect里面保存的相关组件的更新函数的副作用函数，如果是缓存组件，则清除相关缓存，最后去移除真实DOM上相关节点。
+
+另外组件 DOM 更新（instance.update）是有保存在调度器的任务队列中的，组件卸载的时候，也需要把相关的组件更新（instance.update）设置失效。
+
+在源码的unmountComponent函数中，有这么一段：
+
+```javascript
+if (update) {
+    // 把组件更新函数的active设置false
+    update.active = false
+    unmount(subTree, instance, parentSuspense, doRemove)
+}
+```
+
+然后在Scheduler执行queue队列任务的时候，那些job的active为false的则不执行
+
+```javascript
+const job = queue[flushIndex]
+// 那些job的active为false的则不执行
+if (job && job.active !== false) {
+    callWithErrorHandling(job, null, ErrorCodes.SCHEDULER)
+}
+```
+
+那么组件 DOM 更新（instance.update）什么时候会被删除呢？
+
+在源码的updateComponent函数可以找到删除instance.update的设置
+
+```javascript
+invalidateJob(instance.update)
+// 立即执行更新任务
+instance.update()
+```
+
+调度器删除任务
+
+```javascript
+export function invalidateJob(job: SchedulerJob) {
+  // 找到 job 的索引
+  const i = queue.indexOf(job)
+  if (i > flushIndex) {
+    // 删除 Job
+    queue.splice(i, 1)
+  }
+}
+```
+
+由此我们可以得知在一个组件更新的时候，会先把该组件在调度器里的更新任务先删除。
+
+组件更新的队列任务的失效与删除的区别
 
 ### 父子组件执行顺序与调度器的关系
 
