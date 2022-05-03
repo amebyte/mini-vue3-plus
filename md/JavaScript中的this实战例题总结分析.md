@@ -430,3 +430,113 @@ fn.call({abc : 123},600,100,200) // 600,100,200
 ### this优先级
 
 我们通常把通过call、apply、bind、new对this进行绑定的情况称为显式绑定，而把根据调用关系确定this指向的情况称为隐式绑定。那么显示绑定和隐式绑定谁的优先级更高呢？
+
+例题22
+
+```javascript
+function getName() {
+    console.log(this.txt)
+}
+
+const obj1 = {
+    txt: 'coboy1',
+    getName: getName
+}
+
+const obj2 = {
+    txt: 'coboy2',
+    getName: getName
+}
+
+obj1.getName.call(obj2) // 'coboy2'
+obj2.getName.apply(obj1) // 'coboy1'
+```
+
+可以看出call、apply的显示绑定比隐式绑定优先级更高些。
+
+例题23
+
+```javascript
+function getName(name) {
+   this.txt = name
+}
+
+const obj1 = {}
+
+const newGetName = getName.bind(obj1)
+newGetName('coboy')
+console.log(obj1) // {txt: "coboy"}
+```
+
+当再使用newGetName作为构造函数时。
+
+```javascript
+const obj2 = new newGetName('cobyte')
+console.log(obj2.txt) // 'cobyte'
+```
+
+这个时候新对象中的txt属性值为'cobyte'。
+
+newGetName函数本身是通过bind方法构造的函数，其内部已经将this绑定为obj1,当它再次作为构造函数通过new被调用时，返回的实例就已经和obj1解绑了。也就是说，new绑定修改了bind绑定中的this指向，所以new绑定的优先级比显式bind绑定的更高。
+
+例题24
+
+```javascript
+function getName() {
+   return name => {
+      return this.txt
+   }
+}
+
+const obj1 = { txt: 'coboy1' }
+const obj2 = { txt: 'coboy2' }
+
+const newGetName = getName.call(obj1)
+console.log(newGetName.call(obj2)) // 'coboy1'
+```
+
+由于getName中的this绑定到了obj1上，所以newGetName(引用箭头函数)中的this也会绑到obj1上，箭头函数的绑定无法被修改。
+
+例题25
+
+```javascript
+var txt = 'good boy'
+const getName = () => name => {
+    return this.txt
+}
+
+const obj1 = { txt: 'coboy1' }
+const obj2 = { txt: 'coboy2' }
+
+const newGetName = getName.call(obj1)
+console.log(newGetName.call(obj2)) // 'good boy'
+```
+
+例题26
+
+```javascript
+const txt = 'good boy'
+const getName = () => name => {
+    return this.txt
+}
+
+const obj1 = { txt: 'coboy1' }
+const obj2 = { txt: 'coboy2' }
+
+const newGetName = getName.call(obj1)
+console.log(newGetName.call(obj2)) // undefined
+```
+
+const声明的变量不会挂到window全局对象上，所以this指向window时，自然也找不到txt变量了。
+
+
+
+### 总结
+
+通过本篇内容的学习，我们看到this的用法纷繁多样，确实不容易掌握。但总的来说可以总结为以下几条规则：
+
+- 在函数体中，非显式或隐式地简单调用函数时，在严格模式下，函数内的this会绑定到undefined上，在非严格模式下则会被绑定到全局对象window/global上。
+- 一般使用new方法调用构造函数时，构造函数内的this会被绑定到新创建的对象上。
+- 一般通过call、apply、bind方法显式调用函数时，函数体内的this会被绑定到指定参数的对象上。
+- 一般通过上下文对象调用函数时，函数体内的this会被绑定到该对象上。
+- 在箭头函数中，this的指向是由外层（函数或全局）作用域来决定的。
