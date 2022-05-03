@@ -6,6 +6,8 @@
 
 - [x] 模板引用ref
 - [x] 生命周期
+- [x] 调度器Scheduler
+- [] watch watchEffect
 
 
 
