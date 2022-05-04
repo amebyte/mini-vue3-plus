@@ -450,7 +450,7 @@ Vue的Hooks设计是从React的Hooks那里借鉴过来的，React的Hooks的本�
 
 ### 最后
 
-下一篇准备写一下watch API的实现原理，watch API也需要和调度器结合进行理解。
+下一篇准备写一下watch API的实现原理，同时watch API也需要和调度器结合进行理解，只要相互串联理解才可以把Vue3底层设计和实现原理理解得更加透切一些。
 
 
 
