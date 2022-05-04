@@ -1,0 +1,3 @@
+# Vue3的watch、watchEffect的实现原理及其和调度器Scheduler的关系 
+
+所谓watch，其本质就是观测一个响应式数据，当数据发生变化的时候通知并执行相应的回调函数。 
