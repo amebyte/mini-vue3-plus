@@ -4,3 +4,20 @@
 
 什么是副作用函数？
 副作用函数指的是会产生副作用的函数，如下面的代码所示：
+
+```javascript
+function effect() {
+    document.body.innerText = 'hello coboy ~'
+}
+```
+
+当effect函数执行时，它会设置body的文本内容，但除了effect函数之外的任何函数都可以读取或者设置body的文本内容。也就是说，effect函数的执行会直接或间接影响其他函数的执行，这时我们说effect函数产生了副作用。副作用很容易产生，例如一个函数修改了全局变量，这其实也是一个副作用，如下面的代码所示：
+
+```javascript
+// 全局变量
+let val = 1
+function effect() {
+    val = 2 // 修改全局变量，产生副作用
+}
+```
+
