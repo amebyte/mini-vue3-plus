@@ -2,11 +2,12 @@
 
 所谓watch，就是观测一个响应式数据，当数据发生变化的时候通知并执行相应的回调函数。 watch的本质其实就是对effect的二次封装。所以在了解watch API之前，我们先要了解一下effect这个API。
 
-effect函数
+### effect函数
 
-Vue3里面effect函数API是用于注册副作用函数的函数，也是Vue3响应式系统最重要的API之一。通过effect注册了一个副作用函数之后，当这个副作用函数当中的响应式数据发生了读取之后，通过Proxy的get,set拦截，从而在副作用函数与响应式数据之间建立了联系。
+Vue3里面effect函数API是用于注册副作用函数的函数，也是Vue3响应式系统最重要的API之一。通过effect注册了一个副作用函数之后，当这个副作用函数当中的响应式数据发生了读取之后，通过Proxy的get,set拦截，从而在副作用函数与响应式数据之间建立了联系。具体就是当响应式数据的“读取”操作发生时，将当前执行的副作用函数存储起来；当响应式数据的“设置”操作发生时，再将副作用函数取出来执行。
 
-什么是副作用函数？
+#### 什么是副作用函数？
+
 副作用函数指的是会产生副作用的函数，如下面的代码所示：
 
 ```javascript
@@ -25,3 +26,32 @@ function effect() {
 }
 ```
 
+#### effect函数解析
+
+接下来我们看看effect函数的具体代码：
+
+```javascript
+// packages/reactivity/src/effect.ts
+export function effect<T = any>(
+  // 副作用函数
+  fn: () => T,
+  // 配置选项
+  options?: ReactiveEffectOptions
+): ReactiveEffectRunner {
+  if ((fn as ReactiveEffectRunner).effect) {
+    fn = (fn as ReactiveEffectRunner).effect.fn
+  }
+
+  const _effect = new ReactiveEffect(fn)
+  if (options) {
+    extend(_effect, options)
+    if (options.scope) recordEffectScope(_effect, options.scope)
+  }
+  if (!options || !options.lazy) {
+    _effect.run()
+  }
+  const runner = _effect.run.bind(_effect) as ReactiveEffectRunner
+  runner.effect = _effect
+  return runner
+}
+```
