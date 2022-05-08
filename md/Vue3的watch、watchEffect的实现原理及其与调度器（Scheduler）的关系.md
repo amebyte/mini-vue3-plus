@@ -90,3 +90,10 @@ export interface ReactiveEffectOptions {
 }
 ```
 
+
+
+通过上面前奏简单了解effect函数API之后，正式进入我们的主题watch的实现原理
+
+### watch的实现原理
+
+所谓watch，其实本质就是观测一个响应式数据，当数据发生变化时通知并执行相应的回调函数。本质上就是利用了effect以及options.scheduler选项。
