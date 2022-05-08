@@ -38,20 +38,55 @@ export function effect<T = any>(
   // 配置选项
   options?: ReactiveEffectOptions
 ): ReactiveEffectRunner {
+  // 如果当前fn已经是收集函数包装后的函数，则获取监听函数当做入参
   if ((fn as ReactiveEffectRunner).effect) {
     fn = (fn as ReactiveEffectRunner).effect.fn
   }
-
+  // 创建effect对象
   const _effect = new ReactiveEffect(fn)
+  // 把用户传过来的值合并到 _effect 对象上去
   if (options) {
     extend(_effect, options)
     if (options.scope) recordEffectScope(_effect, options.scope)
   }
+  // 有些场景下，我们并不希望它立即执行，而是希望它在需要的时候才执行，例如计算属性。
+  // 这个时候我们可以通过optins中添加lazy属性来达到目的，当options.lazy为true时，则不立即执行副作用函数
   if (!options || !options.lazy) {
     _effect.run()
   }
+  // 把 _effect.run 这个方法返回，也就是等于将辅助函数作为返回值返回
+  // 让用户可以自行选择调用的时机（调用 fn）
   const runner = _effect.run.bind(_effect) as ReactiveEffectRunner
   runner.effect = _effect
   return runner
 }
 ```
+
+简单总结一下effect
+
+- 接收一个副作用函数和options参数
+- 判断传入的副作用函数是不是effect，如果是取出原始值
+- 调用createReactiveEffect创建effect
+- 把用户传过来的options参数合并到创建的effect对象上
+- 如果传入的options参数中的lazy为false则立即执行effect包装之后的副作用函数
+- 最后返回effect让用户可以自行选择调用的时机
+
+#### 可调度执行
+
+所谓可调度，指的是当trigger动作触发副作用函数重新执行时，有能力决定副作用函数执行的时机、次数以及方式。
+
+effect函数的第二个参数options，允许用户指定调度器。当用户在调用effect函数注册副作用函数时，可以传递第二个参数options。可以在options中指定scheduler调度函数。
+
+这里，我们顺便介绍一下 effect 的 options 参数： 
+
+```javascript
+export interface ReactiveEffectOptions {
+  lazy?: boolean //是否懒执行副作用函数
+  scheduler?: (job: ReactiveEffect) => void //调度函数
+  onTrack?: (event: DebuggerEvent) => void //追踪时触发
+  onTrigger?: (event: DebuggerEvent) => void //触发回调时触发
+  onStop?: () => void //停止监听时触发
+  allowRecurse?: boolean //是否允许递归调用
+}
+```
+
