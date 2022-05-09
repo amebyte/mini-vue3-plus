@@ -98,6 +98,21 @@ export interface ReactiveEffectOptions {
 
 所谓watch，其实本质就是观测一个响应式数据，当数据发生变化时通知并执行相应的回调函数。本质上就是利用了effect以及options.scheduler选项。
 
+我们来看看源码中的watch API：
+
+```javascript
+// packages/runtime-core/src/apiWatch.ts
+export function watch(
+  source,
+  cb,
+  options
+) {
+  return doWatch(source, cb, options)
+}
+```
+
+我们可以看到watch API最终调取了doWatch这个函数。
+
 
 
 immediate 的实现原理
