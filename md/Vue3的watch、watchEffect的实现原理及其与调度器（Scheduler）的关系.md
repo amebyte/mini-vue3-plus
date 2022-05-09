@@ -97,3 +97,13 @@ export interface ReactiveEffectOptions {
 ### watch的实现原理
 
 所谓watch，其实本质就是观测一个响应式数据，当数据发生变化时通知并执行相应的回调函数。本质上就是利用了effect以及options.scheduler选项。
+
+
+
+immediate 的实现原理
+
+deep的实现原理
+
+新老值的实现原理
+
+与scheduler的关系
