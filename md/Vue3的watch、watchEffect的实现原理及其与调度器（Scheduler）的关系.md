@@ -1,6 +1,6 @@
 # Vue3的watch、watchEffect的实现原理及其与调度器（Scheduler）的关系 
 
-所谓watch，就是观测一个响应式数据，当数据发生变化的时候通知并执行相应的回调函数。 watch的本质其实就是对effect的二次封装。所以在了解watch API之前，我们先要了解一下effect这个API。
+所谓watch，就是观测一个响应式数据，当数据发生变化的时候通知并执行相应的回调函数。 Vue3最新的watch实现是通过最底层的响应式类ReactiveEffect的实例化一个effect对象来实现的。它的创建过程跟effect API的实现类似，所以在了解watch API之前，我们先要了解一下effect这个API。
 
 ### effect函数
 
@@ -255,6 +255,53 @@ if (flush === 'sync') {
 }
 ```
 
+通过上述分析我们已经知道watch的getter和scheduler是如何实现的了，因为watch是通过响应式最底层的响应式类ReactiveEffect的实例化创建一个effect实例，而创建effect实例时需要传递一个副作用函数getter和一个调度函数scheduler。
+
+```javascript
+const effect = new ReactiveEffect(getter, scheduler)
+```
+
+把scheduler调度函数封装成一个通用函数job，分别在初始化和变更的时候执行它。
+
+```javascript
+  let oldValue = isMultiSource ? [] : INITIAL_WATCHER_VALUE
+  const job: SchedulerJob = () => {
+    if (!effect.active) {
+      return
+    }
+    if (cb) {
+      // watch(source, cb)
+      const newValue = effect.run()
+      if (
+        deep ||
+        forceTrigger ||
+        (isMultiSource
+          ? (newValue as any[]).some((v, i) =>
+              hasChanged(v, (oldValue as any[])[i])
+            )
+          : hasChanged(newValue, oldValue)) ||
+        (__COMPAT__ &&
+          isArray(newValue) &&
+          isCompatEnabled(DeprecationTypes.WATCH_ARRAY, instance))
+      ) {
+        // cleanup before running cb again
+        if (cleanup) {
+          cleanup()
+        }
+        callWithAsyncErrorHandling(cb, instance, ErrorCodes.WATCH_CALLBACK, [
+          newValue,
+          // pass undefined as the old value when it's changed for the first time
+          oldValue === INITIAL_WATCHER_VALUE ? undefined : oldValue,
+          onCleanup
+        ])
+        oldValue = newValue
+      }
+    } else {
+      // watchEffect
+      effect.run()
+    }
+  }
+```
 
 
 
