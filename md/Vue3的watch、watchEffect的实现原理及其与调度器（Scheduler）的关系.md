@@ -111,9 +111,73 @@ export function watch(
 }
 ```
 
-我们可以看到watch API最终调取了doWatch这个函数。
+我们可以看到watch API最终调取了doWatch 这个函数。
 
+对一个参数进行处理，包装成一个getter函数
 
+```javascript
+  const instance = currentInstance
+  let getter: () => any
+  let forceTrigger = false
+  let isMultiSource = false
+  if (isRef(source)) {
+    // 如果是ref类型
+    getter = () => source.value
+    forceTrigger = !!source._shallow
+  } else if (isReactive(source)) {
+    // 如果是reactive类型
+    getter = () => source
+    // 深度监听为true
+    deep = true
+  } else if (isArray(source)) {
+    // 如果是数组
+    isMultiSource = true
+    forceTrigger = source.some(isReactive)
+    getter = () =>
+      source.map(s => {
+        if (isRef(s)) {
+          return s.value
+        } else if (isReactive(s)) {
+          return traverse(s)
+        } else if (isFunction(s)) {
+          return callWithErrorHandling(s, instance, ErrorCodes.WATCH_GETTER)
+        } else {
+          __DEV__ && warnInvalidSource(s)
+        }
+      })
+  } else if (isFunction(source)) {
+    if (cb) {
+      // 如果是数组并且有回调函数
+      getter = () =>
+        callWithErrorHandling(source, instance, ErrorCodes.WATCH_GETTER)
+    } else {
+      // 没有回调函数
+      getter = () => {
+        if (instance && instance.isUnmounted) {
+          return
+        }
+        if (cleanup) {
+          cleanup()
+        }
+        return callWithAsyncErrorHandling(
+          source,
+          instance,
+          ErrorCodes.WATCH_CALLBACK,
+          [onInvalidate]
+        )
+      }
+    }
+  } else {
+    getter = NOOP
+    __DEV__ && warnInvalidSource(source)
+  }
+
+  if (cb && deep) {
+    // 如果有回调函数并且深度监听为true，那么就通过traverse函数进行深度递归监听
+    const baseGetter = getter
+    getter = () => traverse(baseGetter())
+  }
+```
 
 immediate 的实现原理
 
