@@ -154,6 +154,7 @@ export function watch(
       // 没有回调函数
       getter = () => {
         if (instance && instance.isUnmounted) {
+          // 组件已经卸载就返回
           return
         }
         if (cleanup) {
@@ -169,7 +170,6 @@ export function watch(
     }
   } else {
     getter = NOOP
-    __DEV__ && warnInvalidSource(source)
   }
 
   if (cb && deep) {
@@ -178,6 +178,80 @@ export function watch(
     getter = () => traverse(baseGetter())
   }
 ```
+通过上述代码解析，我们可以总结得知，watch的第一个参数可以是
+
+- ref类型的变量
+
+- reactive类型的变量
+- 数组类型的变量，数组里面的元素可以是ref类型的变量、reactive类型的变量、Function函数
+- Function函数
+
+
+
+接下来我们看看traverse函数如何实现进行深度递归监听的
+
+```javascript
+export function traverse(value: unknown, seen?: Set<unknown>) {
+  // 如果是普通类型或者不是响应式的对象就直接返回，ReactiveFlags.SKIP表示不需要响应式的对象
+  if (!isObject(value) || (value as any)[ReactiveFlags.SKIP]) {
+    return value
+  }
+  seen = seen || new Set()
+  if (seen.has(value)) {
+    // 如果已经读取过就返回
+    return value
+  }
+  // 读取了就添加到集合中
+  seen.add(value)
+  if (isRef(value)) {
+    // 如果是ref类型，继续递归执行.value值
+    traverse(value.value, seen)
+  } else if (isArray(value)) {
+    // 如果是数组类型
+    for (let i = 0; i < value.length; i++) {
+      traverse(value[i], seen)
+    }
+  } else if (isSet(value) || isMap(value)) {
+    // 如果是Set或者Map类型数据
+    value.forEach((v: any) => {
+      traverse(v, seen)
+    })
+  } else if (isPlainObject(value)) {
+    // 如果是对象
+    for (const key in value) {
+      traverse((value as any)[key], seen)
+    }
+  }
+  return value
+}
+```
+
+traverse函数主要处理各种类型数据读取监听
+
+scheduler处理
+
+```javascript
+let scheduler: EffectScheduler
+if (flush === 'sync') {
+    scheduler = job as any // the scheduler function gets called directly
+} else if (flush === 'post') {
+    scheduler = () => queuePostRenderEffect(job, instance && instance.suspense)
+} else {
+    // default: 'pre'
+    scheduler = () => {
+        if (!instance || instance.isMounted) {
+            queuePreFlushCb(job)
+        } else {
+            // with 'pre' option, the first call must happen before
+            // the component is mounted so it is called synchronously.
+            job()
+        }
+    }
+}
+```
+
+
+
 
 immediate 的实现原理
 
