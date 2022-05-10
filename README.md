@@ -4,9 +4,9 @@
 
 目前已经实现：
 
-- [x] 模板引用ref
-- [x] 生命周期
-- [x] 调度器Scheduler
+- [x] 模板引用ref：[Vue3 模板引用 ref 的实现原理](https://juejin.cn/post/7087227183613083678)
+- [x] 生命周期：[Vue3生命周期Hooks的原理及其与调度器(Scheduler)的关系](https://juejin.cn/post/7093880734246502414)
+- [x] 调度器Scheduler：[Vue3生命周期Hooks的原理及其与调度器(Scheduler)的关系](https://juejin.cn/post/7093880734246502414)
 - [ ] watch watchEffect
 
 
