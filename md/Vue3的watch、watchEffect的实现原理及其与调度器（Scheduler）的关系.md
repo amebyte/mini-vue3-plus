@@ -201,7 +201,7 @@ export function traverse(value: unknown, seen?: Set<unknown>) {
     // 如果已经读取过就返回
     return value
   }
-  // 读取了就添加到集合中
+  // 读取了就添加到集合中，代表遍历地读取过了，避免循环引用引起死循环
   seen.add(value)
   if (isRef(value)) {
     // 如果是ref类型，继续递归执行.value值
@@ -209,15 +209,17 @@ export function traverse(value: unknown, seen?: Set<unknown>) {
   } else if (isArray(value)) {
     // 如果是数组类型
     for (let i = 0; i < value.length; i++) {
+      // 递归调用traverse进行处理
       traverse(value[i], seen)
     }
   } else if (isSet(value) || isMap(value)) {
     // 如果是Set或者Map类型数据
     value.forEach((v: any) => {
+      // 递归调用traverse进行处理
       traverse(v, seen)
     })
   } else if (isPlainObject(value)) {
-    // 如果是对象
+    // 如果是对象，使用for in 读取对象的每一个值，并递归调用traverse进行处理
     for (const key in value) {
       traverse((value as any)[key], seen)
     }
@@ -226,24 +228,27 @@ export function traverse(value: unknown, seen?: Set<unknown>) {
 }
 ```
 
-traverse函数主要处理各种类型数据读取监听
+traverse函数主要处理各种类型数据读取操作。
 
 scheduler处理
+
+根据watch的第三个参数options.flush的值来来决定如何进行调度。
 
 ```javascript
 let scheduler: EffectScheduler
 if (flush === 'sync') {
-    scheduler = job as any // the scheduler function gets called directly
+    scheduler = job as any // 同步执行
 } else if (flush === 'post') {
+    // 将job函数放到微任务队列中，从而实现异步延迟执行，注意post是在DOM更新之后再执行
     scheduler = () => queuePostRenderEffect(job, instance && instance.suspense)
 } else {
-    // default: 'pre'
+    // flush默认为：'pre'
     scheduler = () => {
         if (!instance || instance.isMounted) {
+            // 在组件更新之后执行
             queuePreFlushCb(job)
         } else {
-            // with 'pre' option, the first call must happen before
-            // the component is mounted so it is called synchronously.
+            // 组件还没挂载的时候，则在组件挂载之前执行。
             job()
         }
     }
