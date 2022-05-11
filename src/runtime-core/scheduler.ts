@@ -2,6 +2,7 @@
 let activePostFlushCbs: any = null
 let postFlushIndex = 0
 const pendingPostFlushCbs: any[] = []
+let activePreFlushCbs: any[] | null = null
 const queue: any[] = []
 let isFlushPending = false
 const p = Promise.resolve()
@@ -17,6 +18,10 @@ export function queueJobs(job) {
         queue.push(job)
     }
     queueFlush()
+}
+
+export function queuePreFlushCb(cb) {
+    queueCb(cb, activePreFlushCbs)
 }
 
 export function queuePostFlushCb(cb) {
