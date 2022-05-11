@@ -8,9 +8,16 @@ import { queuePostFlushCb, queuePreFlushCb } from "./scheduler";
 export function watch(
     source,
     cb,
-    { immediate, deep, flush }
-  ) {
+    options
+) {
+    return doWatch(source as any, cb, options)
+}
 
+function doWatch(
+    source,
+    cb,
+    { immediate, deep, flush }
+) {
     const instance = currentInstance as any
     let getter
     if (isRef(source)) {
@@ -43,28 +50,28 @@ export function watch(
     }
 
       // oldValue默认值处理，如果watch的第一个参数是数组，那么oldValue也是一个数组
-  let oldValue
-  const job = () => {
-    // 如果effect已经失效则什么都不做
-    if (!effect.active) {
-      return
+    let oldValue
+    const job = () => {
+        // 如果effect已经失效则什么都不做
+        if (!effect.active) {
+            return
+        }
+        if (cb) {
+            // 如果有回调函数
+            // 执行effect.run获取新值
+            const newValue = effect.run()
+            if (deep) {
+                // 执行回调函数
+                // 第一次执行的时候，旧值是undefined，这是符合预期的
+                cb(newValue, oldValue)
+                // 把新值赋值给旧值
+                oldValue = newValue
+            }
+        } else {
+            // 没有回调函数则是watchEffect走的分支
+            effect.run()
+        }
     }
-    if (cb) {
-      // 如果有回调函数
-      // 执行effect.run获取新值
-      const newValue = effect.run()
-      if (deep) {
-        // 执行回调函数
-        // 第一次执行的时候，旧值是undefined，这是符合预期的
-        cb(newValue, oldValue)
-        // 把新值赋值给旧值
-        oldValue = newValue
-      }
-    } else {
-      // 没有回调函数则是watchEffect走的分支
-      effect.run()
-    }
-  }
 
     let scheduler
     if (flush === 'sync') {
