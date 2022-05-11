@@ -264,13 +264,16 @@ const effect = new ReactiveEffect(getter, scheduler)
 把scheduler调度函数封装成一个通用函数job，分别在初始化和变更的时候执行它。
 
 ```javascript
+  // oldValue默认值处理，如果watch的第一个参数是数组，那么oldValue也是一个数组
   let oldValue = isMultiSource ? [] : INITIAL_WATCHER_VALUE
   const job: SchedulerJob = () => {
+    // 如果effect已经失效则什么都不做
     if (!effect.active) {
       return
     }
     if (cb) {
-      // watch(source, cb)
+      // 如果有回调函数
+      // 执行effect.run获取新值
       const newValue = effect.run()
       if (
         deep ||
@@ -288,16 +291,18 @@ const effect = new ReactiveEffect(getter, scheduler)
         if (cleanup) {
           cleanup()
         }
+        // 执行回调函数
         callWithAsyncErrorHandling(cb, instance, ErrorCodes.WATCH_CALLBACK, [
           newValue,
-          // pass undefined as the old value when it's changed for the first time
+          // 第一次执行的时候，旧值是undefined，这是符合预期的
           oldValue === INITIAL_WATCHER_VALUE ? undefined : oldValue,
           onCleanup
         ])
+        // 把新值赋值给旧值
         oldValue = newValue
       }
     } else {
-      // watchEffect
+      // 没有回调函数则是watchEffect走的分支
       effect.run()
     }
   }
