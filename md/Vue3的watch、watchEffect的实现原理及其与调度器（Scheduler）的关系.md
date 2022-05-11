@@ -71,6 +71,8 @@ export function effect<T = any>(
 - 如果传入的options参数中的lazy为false则立即执行effect包装之后的副作用函数
 - 最后返回effect让用户可以自行选择调用的时机
 
+简单来说effect API的实现就是实例化ReactiveEffect类获得一个effect的实例对象，在实例化的时候通过传参把副作用函数和当前的effect实例对象进行了绑定，当运行effect实例对象上的run方法的时候就把响应式对象和effect实例对象进行了绑定。在后续如果响应式对象发生了改变，就会把和响应式对象绑定的那些effect实例对象取出来执行effect实例对象上的run方法，run 方法里面就会执行最初传进来的副作用函数。
+
 #### 可调度执行
 
 所谓可调度，指的是当trigger动作触发副作用函数重新执行时，有能力决定副作用函数执行的时机、次数以及方式。

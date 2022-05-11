@@ -1,12 +1,14 @@
 import { extend } from "../shared"
 
+// 记录当前活跃的对象
 let activeEffect
+// 标记是否追踪
 let shouldTrack
 // 用于依赖收集
 export class ReactiveEffect{
     private _fn: any
-    deps = []
-    active = true
+    deps = [] // 所有依赖这个 effect 的响应式对象
+    active = true // 是否为激活状态
     onStop?: () => void
     constructor(fn, public scheduler?) {
         this._fn = fn
