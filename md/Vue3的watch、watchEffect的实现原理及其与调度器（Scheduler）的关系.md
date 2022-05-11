@@ -98,7 +98,15 @@ export interface ReactiveEffectOptions {
 
 ### watch的实现原理
 
-所谓watch，其实本质就是观测一个响应式数据，当数据发生变化时通知并执行相应的回调函数。本质上就是利用了effect以及options.scheduler选项。
+所谓watch，其实本质就是观测一个响应式数据，当数据发生变化时通知并执行相应的回调函数。在最新的Vue3.2版本中，watch API是通过ReactiveEffect类来实现相关功能的。
+
+```javascript
+
+const effect = new ReactiveEffect(getter, scheduler)
+
+```
+
+
 
 我们来看看源码中的watch API：
 

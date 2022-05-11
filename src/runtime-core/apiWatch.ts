@@ -115,29 +115,29 @@ function doWatch(
 export function traverse(value: unknown, seen?: Set<unknown>) {
     // 如果是普通类型或者不是响应式的对象就直接返回，ReactiveFlags.SKIP表示不需要响应式的对象
     if (!isObject(value)) {
-      return value
+        return value
     }
     seen = seen || new Set()
     if (seen.has(value)) {
-      // 如果已经读取过就返回
-      return value
+        // 如果已经读取过就返回
+        return value
     }
     // 读取了就添加到集合中，代表遍历地读取过了，避免循环引用引起死循环
     seen.add(value)
     if (isRef(value)) {
-      // 如果是ref类型，继续递归执行.value值
-      //   traverse(value.value, seen)
+        // 如果是ref类型，继续递归执行.value值
+        //   traverse(value.value, seen)
     } else if (Array.isArray(value)) {
-      // 如果是数组类型
-      for (let i = 0; i < value.length; i++) {
+        // 如果是数组类型
+        for (let i = 0; i < value.length; i++) {
         // 递归调用traverse进行处理
         traverse(value[i], seen)
-      }
+        }
     } else if (isPlainObject(value)) {
-      // 如果是对象，使用for in 读取对象的每一个值，并递归调用traverse进行处理
-      for (const key in value) {
+        // 如果是对象，使用for in 读取对象的每一个值，并递归调用traverse进行处理
+        for (const key in value) {
         traverse((value as any)[key], seen)
-      }
+        }
     }
     return value
-  }
+}
