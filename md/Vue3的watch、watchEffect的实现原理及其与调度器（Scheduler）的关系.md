@@ -52,7 +52,7 @@ export function effect<T = any>(
   // 有些场景下，我们并不希望它立即执行，而是希望它在需要的时候才执行，例如计算属性。
   // 这个时候我们可以通过optins中添加lazy属性来达到目的，当options.lazy为true时，则不立即执行副作用函数
   if (!options || !options.lazy) {
-    _effect.run()
+    _effect.run() // 执行run，响应式数据将与副作用函数之间建立联系
   }
   // 把 _effect.run 这个方法返回，也就是等于将辅助函数作为返回值返回
   // 让用户可以自行选择调用的时机（调用 fn）
@@ -98,13 +98,44 @@ export interface ReactiveEffectOptions {
 
 ### watch的实现原理
 
-所谓watch，其实本质就是观测一个响应式数据，当数据发生变化时通知并执行相应的回调函数。在最新的Vue3.2版本中，watch API是通过ReactiveEffect类来实现相关功能的。
+所谓watch，其实本质就是观测一个响应式数据，当数据发生变化时通知并执行相应的回调函数。
+
+接下来我们简单实现如下响应式数据的监测：
 
 ```javascript
-
-const effect = new ReactiveEffect(getter, scheduler)
-
+watch(() => obj.name, () => {
+    console.log('数据变化了')
+})
 ```
+
+当响应式数据obj.name发生更改的时候，就会执行回调函数。
+
+在最新的Vue3.2版本中，watch API是通过ReactiveEffect类来实现相关功能的。
+
+最简单的watch实现：
+
+```javascript
+export function watch(
+  source,
+  cb,
+  options
+) {
+  // 副作用函数
+  const getter = source
+  // 调度函数
+  const scheduler = () => cb()
+  // 通过ReactiveEffect类实例化出一个effect实例对象
+  const effect = new ReactiveEffect(getter, scheduler)
+  // 立即执行实例对象上的run方法，执行副作用函数，触发依赖收集
+  effect.run()
+}
+```
+
+跟effect API的实现类似，通过ReactiveEffect类实例化出一个effect实例对象，然后执行实例对象上的run方法就会执行getter副作用函数，getter副作用函数里的响应式数据发生了读取的get操作之后触发了依赖收集，通过依赖收集将effect实例对象和响应式数据之间建立了联系，当响应式数据变化的时候，会触发副作用函数的重新执行，但又因为传入了scheduler调度函数，所以会执行调度函数，而调度函数里是执行了回调函数cb，从而实现了监测。
+
+封装一个通用的读取操作。
+
+
 
 
 
@@ -123,7 +154,7 @@ export function watch(
 
 我们可以看到watch API最终调取了doWatch 这个函数。
 
-对一个参数进行处理，包装成一个getter函数
+对第一个参数进行处理，包装成一个getter函数
 
 ```javascript
   const instance = currentInstance
