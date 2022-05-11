@@ -5,6 +5,13 @@ import { isFunction, isObject, isPlainObject } from "../shared";
 import { currentInstance } from "./component";
 import { queuePostFlushCb, queuePreFlushCb } from "./scheduler";
 
+export function watchEffect(
+    effect,
+    options?
+) {
+    return doWatch(effect, null, options)
+}
+
 export function watch(
     source,
     cb,
