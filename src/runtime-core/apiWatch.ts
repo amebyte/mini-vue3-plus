@@ -12,6 +12,20 @@ export function watchEffect(
     return doWatch(effect, null, options)
 }
 
+export function watchPostEffect(
+    effect,
+    options?
+  ) {
+    return doWatch(effect, null, { flush: 'post' })
+}
+  
+export function watchSyncEffect(
+effect,
+options?
+) {
+    return doWatch(effect, null, { flush: 'sync' })
+}
+
 export function watch(
     source,
     cb,
@@ -23,7 +37,7 @@ export function watch(
 function doWatch(
     source,
     cb,
-    { immediate, deep, flush }
+    { immediate, deep, flush }: any
 ) {
     const instance = currentInstance as any
     let getter
