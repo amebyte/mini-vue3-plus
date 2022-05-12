@@ -216,7 +216,19 @@ traverse函数主要处理各种类型数据递归读取操作，从而当任意
 
 #### 新值与旧值的实现原理
 
-
+```javascript
+// 定义新值和老值
+let oldValue, newValue
+const scheduler = () => {
+    // 在scheduler中重新执行effect实例对象的run方法，得到的是新值
+    newValue = effect.run()
+    // 将新值和旧值作为回调函数的参数
+    cb(newValue, oldValue)
+}
+const effect = new ReactiveEffect(getter, scheduler)
+// 初始化的时候手动执行effect实例对象的run方法，拿到的值就是旧值
+oldValue = effect.run()
+```
 
 
 我们来看看源码中的watch API：

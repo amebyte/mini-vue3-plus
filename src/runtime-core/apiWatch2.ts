@@ -47,6 +47,8 @@ export function watch(
         newValue = effect.run()
         // 将新值和旧值作为回调函数的参数
         cb(newValue, oldValue)
+        // 更新旧值，不然下一次会得到错误的旧值
+        oldValue = newValue
     }
     const effect = new ReactiveEffect(getter, scheduler)
     // 手动执行effect实例对象的run方法，拿到的值就是旧值
