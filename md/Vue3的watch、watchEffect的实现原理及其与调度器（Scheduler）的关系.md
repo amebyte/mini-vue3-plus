@@ -273,6 +273,7 @@ const job = () => {
 }
 
 const scheduler = () => {
+    // 使用 job 函数作为调度器函数
     job()
 }
 const effect = new ReactiveEffect(getter, scheduler)
@@ -285,7 +286,7 @@ if (immediate) {
 }
 ```
 
-
+回调函数的立即执行和后续的执行本质上没有任何差别。
 
 我们来看看源码中的watch API：
 

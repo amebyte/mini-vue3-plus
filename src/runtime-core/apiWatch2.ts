@@ -53,6 +53,7 @@ export function watch(
     }
 
     const scheduler = () => {
+        // 使用 job 函数作为调度器函数
         job()
     }
     const effect = new ReactiveEffect(getter, scheduler)
