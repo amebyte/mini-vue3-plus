@@ -112,7 +112,7 @@ watch(() => obj.name, () => {
 
 在最新的Vue3.2版本中，watch API是通过ReactiveEffect类来实现相关功能的。
 
-最简单的watch实现：
+#### 最简单的watch实现
 
 ```javascript
 export function watch(
@@ -133,7 +133,7 @@ export function watch(
 
 跟effect API的实现类似，通过ReactiveEffect类实例化出一个effect实例对象，然后执行实例对象上的run方法就会执行getter副作用函数，getter副作用函数里的响应式数据发生了读取的get操作之后触发了依赖收集，通过依赖收集将effect实例对象和响应式数据之间建立了联系，当响应式数据变化的时候，会触发副作用函数的重新执行，但又因为传入了scheduler调度函数，所以会执行调度函数，而调度函数里是执行了回调函数cb，从而实现了监测。
 
-副作用函数的封装
+#### 副作用函数的封装
 
 因为第一个参数source可以是一个：
 - ref类型的变量
@@ -169,9 +169,17 @@ export function watch(
       // 如果是函数
       getter = () => source()
   }
+
+  if (cb && deep) {
+    // 如果有回调函数并且深度监听为true，那么就通过traverse函数进行深度递归监听
+    const baseGetter = getter
+    getter = () => traverse(baseGetter())
+  }
 ```
 
-封装一个通用的读取操作函数traverse。
+#### 通用读取操作函数traverse
+
+接下来我们看看traverse函数如何实现进行深度递归监听的：
 
 ```javascript
 export function traverse(value: unknown, seen?: Set<unknown>) {
@@ -204,7 +212,7 @@ export function traverse(value: unknown, seen?: Set<unknown>) {
     return value
 }
 ```
-
+traverse函数主要处理各种类型数据读取操作。
 
 
 我们来看看源码中的watch API：
@@ -221,81 +229,6 @@ export function watch(
 ```
 
 我们可以看到watch API最终调取了doWatch 这个函数。
-
-对第一个参数进行处理，包装成一个getter函数
-
-```javascript
-  const instance = currentInstance
-  let getter: () => any
-  let forceTrigger = false
-  let isMultiSource = false
-  if (isRef(source)) {
-    // 如果是ref类型
-    getter = () => source.value
-    forceTrigger = !!source._shallow
-  } else if (isReactive(source)) {
-    // 如果是reactive类型
-    getter = () => source
-    // 深度监听为true
-    deep = true
-  } else if (isArray(source)) {
-    // 如果是数组
-    isMultiSource = true
-    forceTrigger = source.some(isReactive)
-    getter = () =>
-      source.map(s => {
-        if (isRef(s)) {
-          return s.value
-        } else if (isReactive(s)) {
-          return traverse(s)
-        } else if (isFunction(s)) {
-          return callWithErrorHandling(s, instance, ErrorCodes.WATCH_GETTER)
-        } else {
-          __DEV__ && warnInvalidSource(s)
-        }
-      })
-  } else if (isFunction(source)) {
-    if (cb) {
-      // 如果是数组并且有回调函数
-      getter = () =>
-        callWithErrorHandling(source, instance, ErrorCodes.WATCH_GETTER)
-    } else {
-      // 没有回调函数
-      getter = () => {
-        if (instance && instance.isUnmounted) {
-          // 组件已经卸载就返回
-          return
-        }
-        if (cleanup) {
-          cleanup()
-        }
-        return callWithAsyncErrorHandling(
-          source,
-          instance,
-          ErrorCodes.WATCH_CALLBACK,
-          [onInvalidate]
-        )
-      }
-    }
-  } else {
-    getter = NOOP
-  }
-
-  if (cb && deep) {
-    // 如果有回调函数并且深度监听为true，那么就通过traverse函数进行深度递归监听
-    const baseGetter = getter
-    getter = () => traverse(baseGetter())
-  }
-```
-通过上述代码解析，我们可以总结得知，watch的第一个参数可以是
-
-
-
-接下来我们看看traverse函数如何实现进行深度递归监听的
-
-
-
-traverse函数主要处理各种类型数据读取操作。
 
 scheduler处理
 
