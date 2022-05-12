@@ -107,7 +107,7 @@ function doWatch(
                 // 在组件更新之后执行
                 queuePreFlushCb(job)
             } else {
-                // 组件还没挂载的时候，则在组件挂载之前执行。
+                // 使用“pre”选项，第一次调用必须在安装组件之前进行，以便同步调用
                 job()
             }
         }

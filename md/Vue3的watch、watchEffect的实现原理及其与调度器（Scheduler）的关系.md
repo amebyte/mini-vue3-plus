@@ -288,7 +288,7 @@ if (immediate) {
 
 回调函数的立即执行和后续的执行本质上没有任何差别。由于回调函数是立即执行的，所以第一次回调函数执行时就没有旧值，或旧值是 undefined 。
 
-#### 指定调度函数的执行时机
+#### 如何控制调度函数的执行时机
 
 Vue3 中的 watch API 可以通过其他选项的 flush 参数来指定回调函数的执行时机，例如：
 
@@ -301,7 +301,7 @@ watch(() => obj.name, () => {
 })
 ```
 
-
+接下来我们看看Vue3源码当中是如何实现指定调度函数的执行时机。
 
 ```javascript
 let scheduler
@@ -317,14 +317,16 @@ if (flush === 'sync') {
             // 在组件更新之前执行
             queuePreFlushCb(job)
         } else {
-            // 组件还没挂载的时候，则在组件挂载之前执行。
+            // 使用 'pre' 选项，第一次调用必须在安装组件之前进行，以便同步调用。
             job()
         }
     }
 }
 ```
 
+参数 sync 和 pre 第一次调用都是相同的，都是同步执行，区别是 pre 在组件创建之后则需要使用 Vue3 内部的独立调度器（Scheduler）的API - queuePreFlushCb来执行，通过queuePreFlushCb的执行，回调函数会被放到Vue3内部独立调度器（Scheduler）的 pre 任务队列中，将在组件更新之前执行。
 
+使用 post 参数则通过Vue3内部独立调度器（Scheduler）的API - queuePostFlushCb 来执行，回调函数会被放到Vue3内部独立调度器（Scheduler）的 post 任务队列中，讲在组件更新之后执行。
 
 我们来看看源码中的watch API：
 
