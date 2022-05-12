@@ -212,7 +212,11 @@ export function traverse(value: unknown, seen?: Set<unknown>) {
     return value
 }
 ```
-traverse函数主要处理各种类型数据读取操作。
+traverse函数主要处理各种类型数据递归读取操作，从而当任意属性发生变化时都能够触发回调函数执行。
+
+#### 新值与旧值的实现原理
+
+
 
 
 我们来看看源码中的watch API：
