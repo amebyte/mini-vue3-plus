@@ -171,9 +171,39 @@ export function watch(
   }
 ```
 
-封装一个通用的读取操作。
+封装一个通用的读取操作函数traverse。
 
-
+```javascript
+export function traverse(value: unknown, seen?: Set<unknown>) {
+    // 如果是普通类型或者不是响应式的对象就直接返回
+    if (!isObject(value)) {
+        return value
+    }
+    seen = seen || new Set()
+    if (seen.has(value)) {
+        // 如果已经读取过就返回
+        return value
+    }
+    // 读取了就添加到集合中，代表遍历地读取过了，避免循环引用引起死循环
+    seen.add(value)
+    if (isRef(value)) {
+        // 如果是ref类型，继续递归执行.value值
+        //   traverse(value.value, seen)
+    } else if (Array.isArray(value)) {
+        // 如果是数组类型
+        for (let i = 0; i < value.length; i++) {
+        // 递归调用traverse进行处理
+        traverse(value[i], seen)
+        }
+    } else if (isPlainObject(value)) {
+        // 如果是对象，使用for in 读取对象的每一个值，并递归调用traverse进行处理
+        for (const key in value) {
+        traverse((value as any)[key], seen)
+        }
+    }
+    return value
+}
+```
 
 
 
@@ -263,43 +293,7 @@ export function watch(
 
 接下来我们看看traverse函数如何实现进行深度递归监听的
 
-```javascript
-export function traverse(value: unknown, seen?: Set<unknown>) {
-  // 如果是普通类型或者不是响应式的对象就直接返回，ReactiveFlags.SKIP表示不需要响应式的对象
-  if (!isObject(value) || (value as any)[ReactiveFlags.SKIP]) {
-    return value
-  }
-  seen = seen || new Set()
-  if (seen.has(value)) {
-    // 如果已经读取过就返回
-    return value
-  }
-  // 读取了就添加到集合中，代表遍历地读取过了，避免循环引用引起死循环
-  seen.add(value)
-  if (isRef(value)) {
-    // 如果是ref类型，继续递归执行.value值
-    traverse(value.value, seen)
-  } else if (isArray(value)) {
-    // 如果是数组类型
-    for (let i = 0; i < value.length; i++) {
-      // 递归调用traverse进行处理
-      traverse(value[i], seen)
-    }
-  } else if (isSet(value) || isMap(value)) {
-    // 如果是Set或者Map类型数据
-    value.forEach((v: any) => {
-      // 递归调用traverse进行处理
-      traverse(v, seen)
-    })
-  } else if (isPlainObject(value)) {
-    // 如果是对象，使用for in 读取对象的每一个值，并递归调用traverse进行处理
-    for (const key in value) {
-      traverse((value as any)[key], seen)
-    }
-  }
-  return value
-}
-```
+
 
 traverse函数主要处理各种类型数据读取操作。
 
