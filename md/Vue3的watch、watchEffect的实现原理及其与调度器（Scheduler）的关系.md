@@ -216,6 +216,16 @@ traverse函数主要处理各种类型数据递归读取操作，从而当任意
 
 #### 新值与旧值的实现原理
 
+我们知道在watch API的第二参数的回调函数的参数中可以拿到被检测的响应式变量的新值和旧值。
+
+```javascript
+watch(() => obj.name, (newValue, oldValue) => {
+    console.log('新值：', newValue, '旧值：', oldValue)
+})
+```
+
+那么如何获得新值与旧值呢？
+
 ```javascript
 // 定义新值和老值
 let oldValue, newValue
@@ -224,11 +234,57 @@ const scheduler = () => {
     newValue = effect.run()
     // 将新值和旧值作为回调函数的参数
     cb(newValue, oldValue)
+    // 更新旧值，不然下一次会得到错误的旧值
+    oldValue = newValue
 }
 const effect = new ReactiveEffect(getter, scheduler)
-// 初始化的时候手动执行effect实例对象的run方法，拿到的值就是旧值
+// 手动执行effect实例对象的run方法，拿到的值就是旧值
 oldValue = effect.run()
 ```
+
+跟effect API的实现很类似，通过实例化ReactiveEffect类得到实例对象effect，然后执行effect实例对象的run方法，拿到的值就是旧值。在执行effect实例对象run方法的时候，就让副作用函数getter中的响应式变量和实例对象effect建立了联系，当其中的响应式变量发生更新的时候，会触发scheduler调度函数的执行，在调度函数里面重新执行effect实例对象的run方法得到的值则是新值，然后在执行watch API中的回调函数，并把新值与旧值作为回调函数的参数传递给回调函数cb，再使用新值更新旧值，否则在下一次变更的时候会得到错误的旧值。
+
+#### 参数 immediate 如何让回调函数立即执行
+
+默认情况下，一个 watch 的回调只会在响应式数据发生变化时才执行，但可以通过选项参数 immediate 来指定回调是否需要立即执行。
+
+```javascript
+watch(() => obj.name, () => {
+    console.log('数据变化了')
+}, {
+    // 回调函数会在watch创建的时候立即执行一次
+    immediate: true
+})
+```
+
+在Vue3源码当中是把 scheduler调度函数封装为一个通用函数job，分别在初始化和变更时执行它。
+
+```javascript
+// 定义老值
+let oldValue
+// 提取 scheduler 调度函数为一个独立的 job 函数
+const job = () => {
+    // 在scheduler中重新执行effect实例对象的run方法，得到的是新值
+    const newValue = effect.run()
+    // 将新值和旧值作为回调函数的参数
+    cb(newValue, oldValue)
+    // 更新旧值，不然下一次会得到错误的旧值
+    oldValue = newValue
+}
+
+const scheduler = () => {
+    job()
+}
+const effect = new ReactiveEffect(getter, scheduler)
+if (immediate) {
+    // 当 immediate 为 true 时立即执行 job，从而触发回调函数执行
+    job()
+} else {
+    // 手动执行effect实例对象的run方法，拿到的值就是旧值
+    oldValue = effect.run()
+}
+```
+
 
 
 我们来看看源码中的watch API：

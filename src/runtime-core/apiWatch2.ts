@@ -40,19 +40,29 @@ export function watch(
       getter = () => traverse(baseGetter())
     }
 
-    // 定义新值和老值
-    let oldValue, newValue
-    const scheduler = () => {
+    // 定义老值
+    let oldValue
+    // 提取 scheduler 调度函数为一个独立的 job 函数
+    const job = () => {
         // 在scheduler中重新执行effect实例对象的run方法，得到的是新值
-        newValue = effect.run()
+        const newValue = effect.run()
         // 将新值和旧值作为回调函数的参数
         cb(newValue, oldValue)
         // 更新旧值，不然下一次会得到错误的旧值
         oldValue = newValue
     }
+
+    const scheduler = () => {
+        job()
+    }
     const effect = new ReactiveEffect(getter, scheduler)
-    // 手动执行effect实例对象的run方法，拿到的值就是旧值
-    oldValue = effect.run()
+    if (immediate) {
+        // 当 immediate 为 true 时立即执行 job，从而触发回调函数执行
+        job()
+    } else {
+        // 手动执行effect实例对象的run方法，拿到的值就是旧值
+        oldValue = effect.run()
+    }
 }
 
 export function traverse(value: unknown, seen?: Set<unknown>) {
