@@ -2,12 +2,16 @@ import { ReactiveEffect } from "../reactivity/effect"
 import { isReactive } from "../reactivity/reactive"
 import { isRef } from "../reactivity/ref"
 import { isFunction, isObject, isPlainObject } from "../shared"
+import { currentInstance } from "./component"
+import { queuePostFlushCb, queuePreFlushCb } from "./scheduler"
 
 export function watch(
     source,
     cb,
     { immediate, deep, flush }: any
   ) {
+    
+    const instance = currentInstance as any
     let getter
     if (isRef(source)) {
       // 如果是ref类型
@@ -52,11 +56,27 @@ export function watch(
         oldValue = newValue
     }
 
-    const scheduler = () => {
-        // 使用 job 函数作为调度器函数
-        job()
+    let scheduler
+    if (flush === 'sync') {
+        scheduler = job // 同步执行
+    } else if (flush === 'post') {
+        // 将job函数放到微任务队列中，从而实现异步延迟执行，注意 post 是在 DOM 更新之后再执行
+        scheduler = () => queuePostFlushCb(job)
+    } else {
+        // flush默认为：'pre'
+        scheduler = () => {
+            if (!instance || instance.isMounted) {
+                // 在组件更新之前执行
+                queuePreFlushCb(job)
+            } else {
+                // 组件还没挂载的时候，则在组件挂载之前执行。
+                job()
+            }
+        }
     }
+
     const effect = new ReactiveEffect(getter, scheduler)
+
     if (immediate) {
         // 当 immediate 为 true 时立即执行 job，从而触发回调函数执行
         job()

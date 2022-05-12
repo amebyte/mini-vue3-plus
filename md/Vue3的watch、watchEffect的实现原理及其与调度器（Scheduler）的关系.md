@@ -286,7 +286,45 @@ if (immediate) {
 }
 ```
 
-回调函数的立即执行和后续的执行本质上没有任何差别。
+回调函数的立即执行和后续的执行本质上没有任何差别。由于回调函数是立即执行的，所以第一次回调函数执行时就没有旧值，或旧值是 undefined 。
+
+#### 指定调度函数的执行时机
+
+Vue3 中的 watch API 可以通过其他选项的 flush 参数来指定回调函数的执行时机，例如：
+
+```javascript
+watch(() => obj.name, () => {
+    console.log('数据变化了')
+}, {
+    // 回调函数会在watch创建的时候立即执行一次
+    flush: 'pre' // 还可以指定为 'post' 、'sync'
+})
+```
+
+
+
+```javascript
+let scheduler
+if (flush === 'sync') {
+    scheduler = job // 同步执行
+} else if (flush === 'post') {
+    // 将job函数放到微任务队列中，从而实现异步延迟执行，注意 post 是在 DOM 更新之后再执行
+    scheduler = () => queuePostFlushCb(job)
+} else {
+    // flush默认为：'pre'
+    scheduler = () => {
+        if (!instance || instance.isMounted) {
+            // 在组件更新之前执行
+            queuePreFlushCb(job)
+        } else {
+            // 组件还没挂载的时候，则在组件挂载之前执行。
+            job()
+        }
+    }
+}
+```
+
+
 
 我们来看看源码中的watch API：
 
