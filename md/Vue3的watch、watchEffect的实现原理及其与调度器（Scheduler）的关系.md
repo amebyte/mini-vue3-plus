@@ -133,6 +133,44 @@ export function watch(
 
 跟effect API的实现类似，通过ReactiveEffect类实例化出一个effect实例对象，然后执行实例对象上的run方法就会执行getter副作用函数，getter副作用函数里的响应式数据发生了读取的get操作之后触发了依赖收集，通过依赖收集将effect实例对象和响应式数据之间建立了联系，当响应式数据变化的时候，会触发副作用函数的重新执行，但又因为传入了scheduler调度函数，所以会执行调度函数，而调度函数里是执行了回调函数cb，从而实现了监测。
 
+副作用函数的封装
+
+因为第一个参数source可以是一个：
+- ref类型的变量
+- reactive类型的变量
+- Array类型的变量，数组里面的元素可以是ref类型的变量、reactive类型的变量、Function函数
+- Function函数
+
+所以需要对第一个参数处理封装成一个通用的副作用函数。
+
+```javascript
+  let getter: () => any
+  if (isRef(source)) {
+    // 如果是ref类型
+    getter = () => source.value
+  } else if (isReactive(source)) {
+    // 如果是reactive类型
+    getter = () => source
+    // 深度监听为true
+    deep = true
+  } else if (isArray(source)) {
+    // 如果是数组，进行循环处理
+    getter = () =>
+      source.map(s => {
+        if (isRef(s)) {
+          return s.value
+        } else if (isReactive(s)) {
+          return traverse(s)
+        } else if (isFunction(s)) {
+          return s()
+        }
+      })
+  } else if (isFunction(source)) {
+      // 如果是函数
+      getter = () => source()
+  }
+```
+
 封装一个通用的读取操作。
 
 
@@ -220,12 +258,6 @@ export function watch(
   }
 ```
 通过上述代码解析，我们可以总结得知，watch的第一个参数可以是
-
-- ref类型的变量
-
-- reactive类型的变量
-- 数组类型的变量，数组里面的元素可以是ref类型的变量、reactive类型的变量、Function函数
-- Function函数
 
 
 
