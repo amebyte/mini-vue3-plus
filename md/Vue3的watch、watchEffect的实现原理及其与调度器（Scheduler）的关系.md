@@ -177,7 +177,11 @@ export function watch(
   }
 ```
 
-#### 通用读取操作函数traverse
+#### deep的实现原理 
+
+所谓 deep 其实就是深度递归执行响应式对象里的每个值，让每一个 key 值与副作用函数建立联系，以便后续任何一个响应式的 key 值发生了变化都会触发副作用函数的执行。其实就是上面 traverse 函数主要做的事情。
+
+##### 通用读取操作函数traverse
 
 接下来我们看看traverse函数如何实现进行深度递归监听的：
 
@@ -314,7 +318,7 @@ if (flush === 'sync') {
     // flush默认为：'pre'
     scheduler = () => {
         if (!instance || instance.isMounted) {
-            // 在组件更新之前执行
+            // 加入 Pre 队列 组件更新前执行
             queuePreFlushCb(job)
         } else {
             // 使用 'pre' 选项，第一次调用必须在安装组件之前进行，以便同步调用。
@@ -327,6 +331,9 @@ if (flush === 'sync') {
 参数 sync 和 pre 第一次调用都是相同的，都是同步执行，区别是 pre 在组件创建之后则需要使用 Vue3 内部的独立调度器（Scheduler）的API - queuePreFlushCb来执行，通过queuePreFlushCb的执行，回调函数会被放到Vue3内部独立调度器（Scheduler）的 pre 任务队列中，将在组件更新之前执行。
 
 使用 post 参数则通过Vue3内部独立调度器（Scheduler）的API - queuePostFlushCb 来执行，回调函数会被放到Vue3内部独立调度器（Scheduler）的 post 任务队列中，讲在组件更新之后执行。
+
+### 与调度器（scheduler）的关系
+
 
 我们来看看源码中的watch API：
 
@@ -342,91 +349,3 @@ export function watch(
 ```
 
 我们可以看到watch API最终调取了doWatch 这个函数。
-
-scheduler处理
-
-根据watch的第三个参数options.flush的值来来决定如何进行调度。
-
-```javascript
-let scheduler: EffectScheduler
-if (flush === 'sync') {
-    scheduler = job as any // 同步执行
-} else if (flush === 'post') {
-    // 将job函数放到微任务队列中，从而实现异步延迟执行，注意post是在DOM更新之后再执行
-    scheduler = () => queuePostRenderEffect(job, instance && instance.suspense)
-} else {
-    // flush默认为：'pre'
-    scheduler = () => {
-        if (!instance || instance.isMounted) {
-            // 在组件更新之后执行
-            queuePreFlushCb(job)
-        } else {
-            // 组件还没挂载的时候，则在组件挂载之前执行。
-            job()
-        }
-    }
-}
-```
-
-通过上述分析我们已经知道watch的getter和scheduler是如何实现的了，因为watch是通过响应式最底层的响应式类ReactiveEffect的实例化创建一个effect实例，而创建effect实例时需要传递一个副作用函数getter和一个调度函数scheduler。
-
-```javascript
-const effect = new ReactiveEffect(getter, scheduler)
-```
-
-把scheduler调度函数封装成一个通用函数job，分别在初始化和变更的时候执行它。
-
-```javascript
-  // oldValue默认值处理，如果watch的第一个参数是数组，那么oldValue也是一个数组
-  let oldValue = isMultiSource ? [] : INITIAL_WATCHER_VALUE
-  const job: SchedulerJob = () => {
-    // 如果effect已经失效则什么都不做
-    if (!effect.active) {
-      return
-    }
-    if (cb) {
-      // 如果有回调函数
-      // 执行effect.run获取新值
-      const newValue = effect.run()
-      if (
-        deep ||
-        forceTrigger ||
-        (isMultiSource
-          ? (newValue as any[]).some((v, i) =>
-              hasChanged(v, (oldValue as any[])[i])
-            )
-          : hasChanged(newValue, oldValue)) ||
-        (__COMPAT__ &&
-          isArray(newValue) &&
-          isCompatEnabled(DeprecationTypes.WATCH_ARRAY, instance))
-      ) {
-        // cleanup before running cb again
-        if (cleanup) {
-          cleanup()
-        }
-        // 执行回调函数
-        callWithAsyncErrorHandling(cb, instance, ErrorCodes.WATCH_CALLBACK, [
-          newValue,
-          // 第一次执行的时候，旧值是undefined，这是符合预期的
-          oldValue === INITIAL_WATCHER_VALUE ? undefined : oldValue,
-          onCleanup
-        ])
-        // 把新值赋值给旧值
-        oldValue = newValue
-      }
-    } else {
-      // 没有回调函数则是watchEffect走的分支
-      effect.run()
-    }
-  }
-```
-
-
-
-immediate 的实现原理
-
-deep的实现原理
-
-新老值的实现原理
-
-与scheduler的关系
