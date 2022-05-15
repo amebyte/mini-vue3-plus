@@ -1,4 +1,4 @@
-# Vue3的effect、watch、watchEffect API的最新实现原理 
+# Vue3的effect、watch、watchEffect API的实现原理 
 
 所谓 watch，就是观测一个响应式数据或者监测一个副作用函数里面的响应式数据，当数据发生变化的时候通知并执行相应的回调函数。 Vue3 最新的 watch 实现是通过最底层的响应式类 ReactiveEffect 的实例化一个 effect 对象来实现的。它的创建过程跟 effect API 的实现类似，所以在了解 watch API 之前，我们先要了解一下 effect 这个 API。
 
