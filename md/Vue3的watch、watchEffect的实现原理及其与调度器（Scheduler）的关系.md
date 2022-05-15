@@ -26,6 +26,8 @@ function effect() {
 }
 ```
 
+例子说明来自 《vue.js 设计与实现》
+
 #### effect函数解析
 
 接下来我们看看effect函数的具体代码：
@@ -92,7 +94,62 @@ export interface ReactiveEffectOptions {
 }
 ```
 
+#### ReactiveEffect类
 
+相信很多关注Vue3源码的同学都知道，Vue3先前的响应式系统版本中是没有 ReactiveEffect 这个类的，最新版本用面向对象的编程方式可以把变量当成对象进行操作，让编程思路更加清晰简洁，而且减少了很多冗余变量的出现，在封装 effect 相关的数据和方法，方便了函数、变量、数据的管理。
+
+下面我们来看看 ReactiveEffect 这个类的源码：
+
+```javascript
+// 记录当前活跃的对象
+let activeEffect
+// 标记是否追踪
+let shouldTrack
+// 用于依赖收集
+export class ReactiveEffect{
+    private _fn: any
+    deps = [] // 所有依赖这个 effect 的响应式对象
+    active = true // 是否为激活状态
+    onStop?: () => void
+    constructor(fn, public scheduler?) {
+    	// 用户传进来的副作用函数。
+        this._fn = fn
+    }
+    run() {
+        // 执行 fn  但是不收集依赖
+        if(!this.active) {
+            return this._fn()
+        }
+        // 执行 fn  收集依赖
+        // 可以开始收集依赖了
+        shouldTrack = true
+        // 执行的时候给全局的 activeEffect 赋值
+        // 利用全局属性来获取当前的 effect
+        activeEffect = this
+        // 执行用户传入的 fn
+        const result = this._fn()
+        // 重置
+        shouldTrack = false
+        return result
+    }
+    stop() {
+        if(this.active) {
+            // 如果第一次执行 stop 后 active 就 false 了
+            // 这是为了防止重复的调用，执行 stop 逻辑
+            cleanupEffect(this)
+		   // 如果用户往 effect 实例对象设置了 onStop 函数，那么在清除 effect 对象的时候，也会执行用户设置的 onStop 方法
+            if(this.onStop) {
+                this.onStop()
+            }
+            this.active = false
+        }
+    }
+}
+```
+
+通过 ReactiveEffect 这个类相当于是实现了响应式系统里面的一个大管家，这个大管家管理着用户设置的副作用函数，调度函数 scheduler，所有依赖这个 effect 的响应式对象 deps 参数，还实现了两个方法，run 和 stop，在 run 方法里面执行副作用函数，触发依赖收集，并返回副作用函数执行的结果，stop 方法则是清楚当前的 effect 实例对象。
+
+通过 ReactiveEffect 这个类我们可以很清晰地看到大管家 effect 实例对象在干些什么工作。
 
 通过上面前奏简单了解 effect 函数 API 之后，正式进入我们的主题 watch 的实现原理
 
@@ -383,6 +440,40 @@ export function watchEffect(
 export type WatchEffect = (onCleanup: OnCleanup) => void
 ```
 
+我们再来看这个 onCleanup 参数：
+
+```javascript
+  let cleanup: () => void
+  let onCleanup: OnCleanup = (fn: () => void) => {
+    cleanup = effect.onStop = () => {
+      callWithErrorHandling(fn, instance, ErrorCodes.WATCH_CLEANUP)
+    }
+  }
+```
+
+我们可以看到这个 onCleanup 参数也是一个函数，并且还可以传一个函数作为参数，在 onCleanup 函数的内部再封装一个函数，并且把它赋值给 cleanup 变量和 effect 实例对象上的 onStop 属性， 在封装的这个函数里面再去执行用户传进来的函数。
+
+然后我们可以在 getter 的副作用函数可以看到以下代码：
+
+```javascript
+getter = () => {
+    // 如果存在 cleanup 则执行 cleanup 函数
+    if (cleanup) {
+        cleanup()
+    }
+    return callWithAsyncErrorHandling(
+        source,
+        instance,
+        ErrorCodes.WATCH_CALLBACK,
+        [onCleanup] // 把 onCleanup 传进去供给用户使用
+    )
+}
+```
+
+如果存在 cleanup 则执行 cleanup 函数，相当于执行了用户设置的回调函数，在返回的函数中已经把内部定义好的 onCleanup 传进去供给用户使用。
+
+**为什么要把封装的函数也赋值给 effect 实例对象上的 onStop 属性？**
+
 我们回忆一下上面的分析，watch 的实现就是通过 ReactiveEffect 这类的实例化创建了一个 effect 的实例对象。  
 
 ```javascript
@@ -399,3 +490,23 @@ return () => {
 ```
 
 在最后返回了一个函数，在这个函数里面执行了 effect 实例对象的 stop 方法，也就是清除了这个副作用函数的依赖跟踪。
+
+在 ReactiveEffect 类的 stop 方法里面：
+
+```javascript
+class ReactiveEffect{  
+    stop() {
+        if (this.active) {
+          // 清除实例对象本身
+          cleanupEffect(this)
+          // 如果实例对象上存在 onStop 方法则执行 onStop 方法
+          if (this.onStop) {
+            this.onStop()
+          }
+          this.active = false
+        }
+    }
+}
+```
+
+我们可以看到在清除 effect 实例对象的同时，如果存在 onStop 方法则执行 onStop 方法，故 watchEffect 里面把封装的函数也赋值给 effect 实例对象上的 onStop 属性之后，当用户在手动停止 watchEffect 的监听时也会执行用户设置的回调函数 onCleanup。
