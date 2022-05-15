@@ -155,11 +155,30 @@ export interface ReactiveEffectOptions {
 
 #### 组件更新函数的最新实现
 
+我们来看看组件更新函数最新的实现是怎么实现的。
 
+```javascript
+const setupRenderEffect = () => {
+    const componentUpdateFn = () => {
+     // ...   
+    }
+    // 通过 ReactiveEffect 类来创建渲染 effect 实例对象
+    const effect = (instance.effect = new ReactiveEffect(
+      componentUpdateFn,
+      () => queueJob(instance.update),
+      instance.scope
+    ))
+    // 组件更新函数就是 effect 实例对象上 run 方法
+    const update = (instance.update = effect.run.bind(effect) as SchedulerJob)
+    update.id = instance.uid
+    
+    update()
+}
+```
 
+我们可以看到最新的组件更新函数也是通过 ReactiveEffect 类来实现的，把组件更新的副作用函数和调度函数传到 ReactiveEffect 类，再实例化出一个 effect 实例对象，再把 effect 实例对象中的 run 方法赋值给组件更新函数属性。
 
-
-通过上面前奏简单了解 effect 函数 API 之后，正式进入我们的主题 watch 的实现原理
+通过上面前奏简单了解 effect 函数 API 之后，正式进入我们的主题 watch 的实现原理。
 
 ### watch的实现原理
 
@@ -518,3 +537,7 @@ class ReactiveEffect{
 ```
 
 我们可以看到在清除 effect 实例对象的同时，如果存在 onStop 方法则执行 onStop 方法，故 watchEffect 里面把封装的函数也赋值给 effect 实例对象上的 onStop 属性之后，当用户在手动停止 watchEffect 的监听时也会执行用户设置的回调函数 onCleanup。
+
+### 总结
+
+副作用函数和响应式数据之间的联系Vue3的最新源码是通过 ReactiveEffect 类来实现的，最新的 effect API、watch API、组件更新函数都是通过ReactiveEffect 类来实现的。都是利用了 ReactiveEffect 类可以通过 run 方法执行副作用函数及可以通过调度函数控制副作用函数的执行时机。这调度时机的实现本质上是利用了 Vue3 源码中的调度器（Scheduler）和异步的微任务队列。
