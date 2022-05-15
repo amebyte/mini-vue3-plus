@@ -348,9 +348,7 @@ if (flush === 'sync') {
 
 在组件更新队列执行之后，也是需要执行一些回调的，比如生命周期的Hook函数，所以在组件更新队列执行之后也要有一个任务队列。这个就是 watch 的 flush 参数值为 post 时回调函数加入的异步任务队列。
 
-
-
-
+### watchEffect的实现原理
 
 
 我们来看看源码中的watch API：
@@ -366,4 +364,38 @@ export function watch(
 }
 ```
 
-我们可以看到watch API最终调取了doWatch 这个函数。
+我们可以看到watch API最终调取了doWatch 这个函数，而 doWatch 所做的事情就是我们上面分析 watch 实现原理的那些代码。
+
+继续看看 watchEffect API 的源码：
+
+```javascript
+export function watchEffect(
+  effect: WatchEffect,
+  options?: WatchOptionsBase
+): WatchStopHandle {
+  return doWatch(effect, null, options)
+}
+```
+
+可以看到 watchEffect 和 watch 的区别就是 watch 有回调函数而watchEffect没有。通过查看它的第一个参数 effect 的类型我们可以知道 watchEffect 的第一个参数是个副作用函数，并且这个副作用函数有一个回调参数 onCleanup。
+
+```javascript
+export type WatchEffect = (onCleanup: OnCleanup) => void
+```
+
+我们回忆一下上面的分析，watch 的实现就是通过 ReactiveEffect 这类的实例化创建了一个 effect 的实例对象。  
+
+```javascript
+const effect = new ReactiveEffect(getter, scheduler)
+
+// ...
+
+return () => {
+    effect.stop()
+    if (instance && instance.scope) {
+        remove(instance.scope.effects!, effect)
+    }
+}
+```
+
+在最后返回了一个函数，在这个函数里面执行了 effect 实例对象的 stop 方法，也就是清除了这个副作用函数的依赖跟踪。
