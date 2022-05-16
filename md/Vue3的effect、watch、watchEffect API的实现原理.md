@@ -178,7 +178,7 @@ const setupRenderEffect = () => {
 
 我们可以看到最新的组件更新函数也是通过 ReactiveEffect 类来实现的，把组件更新的副作用函数和调度函数传到 ReactiveEffect 类，再实例化出一个 reactive effect 实例对象，再把 reactive effect 实例对象中的 run 方法赋值给组件更新函数属性。
 
-通过上面前奏简单了解 effect 函数 API 之后，正式进入我们的主题 watch 的实现原理。
+通过上面前奏简单了解 effect 函数 API 之后，再进行了解 watch 的实现原理就好理解了。
 
 ### watch 的实现原理
 
