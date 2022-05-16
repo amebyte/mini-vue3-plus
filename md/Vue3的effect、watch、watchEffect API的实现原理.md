@@ -1,10 +1,10 @@
-# Vue3的effect、watch、watchEffect API的实现原理 
+# Vue3的 effect、 watch、watchEffect 的实现原理 
 
-所谓 watch，就是观测一个响应式数据或者监测一个副作用函数里面的响应式数据，当数据发生变化的时候通知并执行相应的回调函数。 Vue3 最新的 watch 实现是通过最底层的响应式类 ReactiveEffect 的实例化一个 effect 对象来实现的。它的创建过程跟 effect API 的实现类似，所以在了解 watch API 之前，我们先要了解一下 effect 这个 API。
+所谓 watch，就是观测一个响应式数据或者监测一个副作用函数里面的响应式数据，当数据发生变化的时候通知并执行相应的回调函数。 Vue3 最新的 watch 实现是通过最底层的响应式类 ReactiveEffect 的实例化一个 reactive effect 对象来实现的。它的创建过程跟 effect API 的实现类似，所以在了解 watch API 之前，我们先要了解一下 effect 这个 API。
 
-### effect函数
+### effect 函数
 
-Vue3 里面 effect 函数 API 是用于注册副作用函数的函数，也是 Vue3 响应式系统最重要的 API 之一。通过 effect 注册了一个副作用函数之后，当这个副作用函数当中的响应式数据发生了读取之后，通过 Proxy 的 get,set 拦截，从而在副作用函数与响应式数据之间建立了联系。具体就是当响应式数据的 ”读取” 操作发生时，将当前执行的副作用函数存储起来；当响应式数据的 “设置” 操作发生时，再将副作用函数取出来执行。
+Vue3 里面 effect 函数 API 是用于注册副作用函数的函数，也是 Vue3 响应式系统最重要的 API 之一。通过 effect 注册了一个副作用函数之后，当这个副作用函数当中的响应式数据发生了读取操作之后，通过 Proxy 的 get,set 拦截，从而在副作用函数与响应式数据之间建立了联系。具体就是当响应式数据的 ”读取” 操作发生时，将当前执行的副作用函数存储起来；当响应式数据的 “设置” 操作发生时，再将储起来的副作用函数取出来执行。
 
 #### 什么是副作用函数？
 
@@ -28,11 +28,11 @@ function effect() {
 
 例子说明来自 《vue.js 设计与实现》
 
-我们在最文章最开头说到 Vue3 最新的 watch 实现是通过最底层的响应式类 ReactiveEffect 的实例化一个 effect 对象来实现的，那么我们先来了解一下  ReactiveEffect。
+我们在最文章最开头说到 Vue3 最新的 watch 实现是通过最底层的响应式类 ReactiveEffect 的实例化一个 reactive effect 对象来实现的，那么我们先来了解一下  ReactiveEffect 类。
 
-#### ReactiveEffect类
+#### ReactiveEffect 类
 
-相信很多关注Vue3源码的同学都知道，Vue3先前的响应式系统版本中是没有 ReactiveEffect 这个类的，最新版本用面向对象的编程方式可以把变量当成对象进行操作，让编程思路更加清晰简洁，而且减少了很多冗余变量的出现，在封装 effect 相关的数据和方法，方便了函数、变量、数据的管理。
+相信很多关注 Vue3 源码的同学都知道，Vue3 先前的响应式系统版本中是没有 ReactiveEffect 这个类的，最新版本用面向对象的编程方式把变量当成对象进行操作，让编程思路更加清晰简洁，而且减少了很多冗余变量的出现，使用 ReactiveEffect 这个类封装了 effect 相关的数据和方法，方便了函数、变量、数据的管理。
 
 下面我们来看看 ReactiveEffect 这个类的源码：
 
@@ -83,11 +83,11 @@ export class ReactiveEffect{
 }
 ```
 
-通过 ReactiveEffect 这个类相当于是实现了响应式系统里面的一个大管家，这个大管家管理着用户设置的副作用函数，调度函数 scheduler，所有依赖这个 effect 的响应式对象 deps 参数，还实现了两个方法，run 和 stop，在 run 方法里面执行副作用函数，触发依赖收集，并返回副作用函数执行的结果，stop 方法则是清楚当前的 effect 实例对象。
+通过 ReactiveEffect 这个类的实例化相当于是实现了响应式系统里面的一个大管家，这个大管家管理着用户设置的副作用函数，调度函数 scheduler，所有依赖这个 reactive effect 的响应式对象 deps 参数，还实现了两个方法，run 和 stop，在 run 方法里面执行副作用函数，触发依赖收集，并返回副作用函数执行的结果，stop 方法则是清除当前的 reactive effect 实例对象。
 
-通过 ReactiveEffect 这个类我们可以很清晰地看到大管家 effect 实例对象在干些什么工作。
+通过 ReactiveEffect 这个类我们可以很清晰地看到大管家 reactive effect 实例对象在干些什么工作。
 
-#### effect函数解析
+#### effect 函数解析
 
 接下来我们看看effect函数的具体代码：
 
@@ -127,12 +127,12 @@ export function effect<T = any>(
 
 - 接收一个副作用函数和 options 参数
 - 判断传入的副作用函数是不是 effect，如果是取出原始值
-- 调用 createReactiveEffect 创建 effect
-- 把用户传过来的 options 参数合并到创建的effect对象上
+- 调用 createReactiveEffect 创建 reactive effect 实例对象
+- 把用户传过来的 options 参数合并到创建的 reactive effect 对象上
 - 如果传入的 options 参数中的 lazy 为 false 则立即执行 effect 包装之后的副作用函数
-- 最后返回 effect 让用户可以自行选择调用的时机
+- 最后返回 reactive effect 实例对象上的 run 方法让用户可以自行选择调用的时机
 
-简单来说 effect API 的实现就是实例化 ReactiveEffect 类获得一个 effect 的实例对象，在实例化的时候通过传参把副作用函数和当前的 effect 实例对象进行了绑定，当运行 effect 实例对象上的 run 方法的时候就把响应式对象和 effect 实例对象进行了绑定。在后续如果响应式对象发生了改变，就会把和响应式对象绑定的那些 effect 实例对象取出来执行 effect 实例对象上的 run 方法，run 方法里面就会执行最初传进来的副作用函数。
+简单来说 effect API 的实现就是实例化 ReactiveEffect 类获得一个 reactive effect 的实例对象，在实例化的时候通过传参把副作用函数和当前的 reactive effect 实例对象进行了绑定，当运行 reactive effect 实例对象上的 run 方法的时候就把响应式对象和 reactive effect 实例对象进行了绑定。在后续如果响应式对象发生了改变，就会把和响应式对象绑定的那些 reactive effect 实例对象取出来执行 reactive effect 实例对象上的 run 方法，run 方法里面就会执行最初传进来的副作用函数。
 
 #### 可调度执行
 
@@ -162,13 +162,13 @@ const setupRenderEffect = () => {
     const componentUpdateFn = () => {
      // ...   
     }
-    // 通过 ReactiveEffect 类来创建渲染 effect 实例对象
+    // 通过 ReactiveEffect 类来创建渲染 reactive effect 实例对象
     const effect = (instance.effect = new ReactiveEffect(
       componentUpdateFn,
       () => queueJob(instance.update),
       instance.scope
     ))
-    // 组件更新函数就是 effect 实例对象上 run 方法
+    // 组件更新函数就是 reactive effect 实例对象上 run 方法
     const update = (instance.update = effect.run.bind(effect) as SchedulerJob)
     update.id = instance.uid
     
@@ -176,11 +176,11 @@ const setupRenderEffect = () => {
 }
 ```
 
-我们可以看到最新的组件更新函数也是通过 ReactiveEffect 类来实现的，把组件更新的副作用函数和调度函数传到 ReactiveEffect 类，再实例化出一个 effect 实例对象，再把 effect 实例对象中的 run 方法赋值给组件更新函数属性。
+我们可以看到最新的组件更新函数也是通过 ReactiveEffect 类来实现的，把组件更新的副作用函数和调度函数传到 ReactiveEffect 类，再实例化出一个 reactive effect 实例对象，再把 reactive effect 实例对象中的 run 方法赋值给组件更新函数属性。
 
 通过上面前奏简单了解 effect 函数 API 之后，正式进入我们的主题 watch 的实现原理。
 
-### watch的实现原理
+### watch 的实现原理
 
 所谓 watch，其实本质就是观测一个响应式数据，当数据发生变化时通知并执行相应的回调函数。
 
@@ -196,7 +196,7 @@ watch(() => obj.name, () => {
 
 在最新的 Vue3.2 版本中，watch API 是通过 ReactiveEffect 类来实现相关功能的。
 
-#### 最简单的watch实现
+#### 最简单的 watch 实现
 
 ```javascript
 export function watch(
@@ -215,7 +215,7 @@ export function watch(
 }
 ```
 
-跟 effect API 的实现类似，通过 ReactiveEffect 类实例化出一个 effect 实例对象，然后执行实例对象上的 run 方法就会执行 getter 副作用函数，getter 副作用函数里的响应式数据发生了读取的 get 操作之后触发了依赖收集，通过依赖收集将 effect 实例对象和响应式数据之间建立了联系，当响应式数据变化的时候，会触发副作用函数的重新执行，但又因为传入了 scheduler 调度函数，所以会执行调度函数，而调度函数里是执行了回调函数 cb，从而实现了监测。
+跟 effect API 的实现类似，通过 ReactiveEffect 类实例化出一个 reactive effect 实例对象，然后执行实例对象上的 run 方法就会执行 getter 副作用函数，getter 副作用函数里的响应式数据发生了读取的 get 操作之后触发了依赖收集，通过依赖收集将 reactive effect 实例对象和响应式数据之间建立了联系，当响应式数据变化的时候，会触发副作用函数的重新执行，但又因为传入了 scheduler 调度函数，所以会执行调度函数，而调度函数里是执行了回调函数 cb，从而实现了监测。
 
 #### 副作用函数的封装
 
@@ -261,11 +261,11 @@ export function watch(
   }
 ```
 
-#### deep的实现原理 
+#### deep 的实现原理 
 
-所谓 deep 其实就是深度递归执行响应式对象里的每个值，让每一个 key 值与副作用函数建立联系，以便后续任何一个响应式的 key 值发生了变化都会触发副作用函数的执行。其实就是上面 traverse 函数主要做的事情。
+所谓 deep 其实就是深度递归执行响应式对象里的每个值，让每一个 key 值与副作用函数建立联系，以便后续任何一个响应式的 key 值发生了变化都会触发副作用函数的执行。其实就是上面 traverse 函数主要做的事情。值得注意的时候，reactvie 创建的响应式对象，默认 deep 为 true，并且内部是强制性设置 deep 为 true，其实这也是合理的。
 
-##### 通用读取操作函数traverse
+##### 通用读取操作函数 traverse
 
 接下来我们看看traverse函数如何实现进行深度递归监听的：
 
@@ -318,7 +318,7 @@ watch(() => obj.name, (newValue, oldValue) => {
 // 定义新值和老值
 let oldValue, newValue
 const scheduler = () => {
-    // 在 scheduler 中重新执行 effect 实例对象的 run 方法，得到的是新值
+    // 在 scheduler 中重新执行 reactive effect 实例对象的 run 方法，得到的是新值
     newValue = effect.run()
     // 将新值和旧值作为回调函数的参数
     cb(newValue, oldValue)
@@ -326,11 +326,11 @@ const scheduler = () => {
     oldValue = newValue
 }
 const effect = new ReactiveEffect(getter, scheduler)
-// 手动执行 effect 实例对象的 run 方法，拿到的值就是旧值
+// 手动执行 reactive effect 实例对象的 run 方法，拿到的值就是旧值
 oldValue = effect.run()
 ```
 
-跟 effect API 的实现很类似，通过实例化 ReactiveEffect 类得到实例对象 effect，然后执行 effect 实例对象的 run 方法，拿到的值就是旧值。在执行 effect 实例对象 run 方法的时候，就让副作用函数 getter 中的响应式变量和实例对象 effect 建立了联系，当其中的响应式变量发生更新的时候，会触发 scheduler 调度函数的执行，在调度函数里面重新执行 effect 实例对象的 run 方法得到的值则是新值，然后在执行 watch API 中的回调函数，并把新值与旧值作为回调函数的参数传递给回调函数 cb，再使用新值更新旧值，否则在下一次变更的时候会得到错误的旧值。
+跟 effect API 的实现很类似，通过实例化 ReactiveEffect 类得到实例对象 reactive effect，然后执行 reactive effect 实例对象的 run 方法，拿到的值就是旧值。在执行 reactive effect 实例对象 run 方法的时候，就让副作用函数 getter 中的响应式变量和实例对象 reactive effect 建立了联系，当其中的响应式变量发生更新的时候，会触发 scheduler 调度函数的执行，在调度函数里面重新执行 reactive effect 实例对象的 run 方法得到的值则是新值，然后在执行 watch API 中的回调函数，并把新值与旧值作为回调函数的参数传递给回调函数 cb，再使用新值更新旧值，否则在下一次变更的时候会得到错误的旧值。
 
 #### 参数 immediate 如何让回调函数立即执行
 
@@ -340,19 +340,19 @@ oldValue = effect.run()
 watch(() => obj.name, () => {
     console.log('数据变化了')
 }, {
-    // 回调函数会在watch创建的时候立即执行一次
+    // 回调函数会在 watch 创建的时候立即执行一次
     immediate: true
 })
 ```
 
-在Vue3源码当中是把 scheduler调度函数封装为一个通用函数job，分别在初始化和变更时执行它。
+在 Vue3 源码当中是把 scheduler 调度函数封装为一个通用函数 job，分别在初始化和变更时执行它。
 
 ```javascript
 // 定义老值
 let oldValue
 // 提取 scheduler 调度函数为一个独立的 job 函数
 const job = () => {
-    // 在 scheduler 中重新执行 effect 实例对象的run方法，得到的是新值
+    // 在 scheduler 中重新执行 reactive effect 实例对象的run方法，得到的是新值
     const newValue = effect.run()
     // 将新值和旧值作为回调函数的参数
     cb(newValue, oldValue)
@@ -369,12 +369,12 @@ if (immediate) {
     // 当 immediate 为 true 时立即执行 job，从而触发回调函数执行
     job()
 } else {
-    // 手动执行 effect 实例对象的 run 方法，拿到的值就是旧值
+    // 手动执行 reactive effect 实例对象的 run 方法，拿到的值就是旧值
     oldValue = effect.run()
 }
 ```
 
-回调函数的立即执行和后续的执行本质上没有任何差别。把回调函数包装成一个通用函数 job，当 immediate 为 true 时，就立即执行，因为是立即执行所以是没有旧值的，所以旧值是 undefined，当 immediate 为 false 时，则先运行 effect 实例对象的 run 方法拿到的值保存起来，其实就是旧值，等到响应式数据变更时触发调度函数执行时，就是执行 job 函数，在 job 函数内部再次执行 effect 实例对象的 run 方法再次拿到的值就是新值。
+回调函数的立即执行和后续的执行本质上没有任何差别。把回调函数包装成一个通用函数 job，当 immediate 为 true 时，就立即执行，因为是立即执行所以是没有旧值的，所以旧值是 undefined，当 immediate 为 false 时，则先运行 reactive effect 实例对象的 run 方法拿到的值保存起来，其实就是旧值，等到响应式数据变更时触发调度函数执行时，就是执行 job 函数，在 job 函数内部再次执行 reactive effect 实例对象的 run 方法再次拿到的值就是新值。
 
 #### 如何控制调度函数的执行时机
 
@@ -384,19 +384,19 @@ Vue3 中的 watch API 可以通过其他选项的 flush 参数来指定回调函
 watch(() => obj.name, () => {
     console.log('数据变化了')
 }, {
-    // 回调函数会在watch创建的时候立即执行一次
+    // 回调函数会在 watch 创建的时候立即执行一次
     flush: 'pre' // 还可以指定为 'post' 、'sync'
 })
 ```
 
-接下来我们看看Vue3源码当中是如何实现指定调度函数的执行时机。
+接下来我们看看 Vue3 源码当中是如何实现指定调度函数的执行时机。
 
 ```javascript
 let scheduler
 if (flush === 'sync') {
     scheduler = job // 同步执行
 } else if (flush === 'post') {
-    // 将job函数放到微任务队列中，从而实现异步延迟执行，注意 post 是在 DOM 更新之后再执行
+    // 将 job 函数放到微任务队列中，从而实现异步延迟执行，注意 post 是在 DOM 更新之后再执行
     scheduler = () => queuePostFlushCb(job)
 } else {
     // flush默认为：'pre'
@@ -414,11 +414,11 @@ if (flush === 'sync') {
 
 参数 sync 和 pre 第一次调用都是相同的，都是同步执行，区别是 pre 在组件创建之后则需要使用 Vue3 内部的独立调度器（Scheduler）的API - queuePreFlushCb来执行，通过queuePreFlushCb的执行，回调函数会被放到Vue3内部独立调度器（Scheduler）的 pre 任务队列中，将在组件更新之前执行。
 
-使用 post 参数则通过Vue3内部独立调度器（Scheduler）的API - queuePostFlushCb 来执行，回调函数会被放到Vue3内部独立调度器（Scheduler）的 post 任务队列中，讲在组件更新之后执行。
+使用 post 参数则通过Vue3内部独立调度器（Scheduler）的 API - queuePostFlushCb 来执行，回调函数会被放到 Vue3 内部独立调度器（Scheduler）的 post 任务队列中，讲在组件更新之后执行。
 
-那么Vue3的调度器，也说是任务队列具体是怎么执行的呢？接下来我们来了解一下Vue3的调度器。
+那么 Vue3 的调度器，也说是任务队列具体是怎么执行的呢？接下来我们来了解一下Vue3的调度器。
 
-### watch与调度器（scheduler）的关系
+### watch 与调度器（scheduler）的关系
 
 组件更新队列
 
@@ -448,7 +448,7 @@ export function watch(
 }
 ```
 
-我们可以看到watch API最终调取了doWatch 这个函数，而 doWatch 所做的事情就是我们上面分析 watch 实现原理的那些代码。
+我们可以看到 watch API 最终调取了 doWatch 这个函数，而 doWatch 所做的事情就是我们上面分析 watch 实现原理的那些代码。
 
 继续看看 watchEffect API 的源码：
 
@@ -461,7 +461,7 @@ export function watchEffect(
 }
 ```
 
-可以看到 watchEffect 和 watch 的区别就是 watch 有回调函数而watchEffect没有。通过查看它的第一个参数 effect 的类型我们可以知道 watchEffect 的第一个参数是个副作用函数，并且这个副作用函数有一个回调参数 onCleanup。
+可以看到 watchEffect 和 watch 的区别就是 watch 有回调函数而 watchEffect 没有。通过查看它的第一个参数 effect 的类型我们可以知道 watchEffect 的第一个参数是个副作用函数，并且这个副作用函数有一个回调参数 onCleanup。
 
 ```javascript
 export type WatchEffect = (onCleanup: OnCleanup) => void
@@ -478,7 +478,7 @@ export type WatchEffect = (onCleanup: OnCleanup) => void
   }
 ```
 
-我们可以看到这个 onCleanup 参数也是一个函数，并且还可以传一个函数作为参数，在 onCleanup 函数的内部再封装一个函数，并且把它赋值给 cleanup 变量和 effect 实例对象上的 onStop 属性， 在封装的这个函数里面再去执行用户传进来的函数。
+我们可以看到这个 onCleanup 参数也是一个函数，并且还可以传一个函数作为参数，在 onCleanup 函数的内部再封装一个函数，并且把它赋值给 cleanup 变量和 reactive effect 实例对象上的 onStop 属性， 在封装的这个函数里面再去执行用户传进来的函数。
 
 然后我们可以在 getter 的副作用函数可以看到以下代码：
 
@@ -501,7 +501,7 @@ getter = () => {
 
 **为什么要把封装的函数也赋值给 effect 实例对象上的 onStop 属性？**
 
-我们回忆一下上面的分析，watch 的实现就是通过 ReactiveEffect 这类的实例化创建了一个 effect 的实例对象。  
+我们回忆一下上面的分析，watch 的实现就是通过 ReactiveEffect 这类的实例化创建了一个 reactive effect 的实例对象。  
 
 ```javascript
 const effect = new ReactiveEffect(getter, scheduler)
@@ -516,7 +516,7 @@ return () => {
 }
 ```
 
-在最后返回了一个函数，在这个函数里面执行了 effect 实例对象的 stop 方法，也就是清除了这个副作用函数的依赖跟踪。
+在最后返回了一个函数，在这个函数里面执行了 reactive effect 实例对象的 stop 方法，也就是清除了这个副作用函数的依赖跟踪。
 
 在 ReactiveEffect 类的 stop 方法里面：
 
@@ -536,7 +536,7 @@ class ReactiveEffect{
 }
 ```
 
-我们可以看到在清除 effect 实例对象的同时，如果存在 onStop 方法则执行 onStop 方法，故 watchEffect 里面把封装的函数也赋值给 effect 实例对象上的 onStop 属性之后，当用户在手动停止 watchEffect 的监听时也会执行用户设置的回调函数 onCleanup。
+我们可以看到在清除 reactive effect 实例对象的同时，如果存在 onStop 方法则执行 onStop 方法，故 watchEffect 里面把封装的函数也赋值给 reactive effect 实例对象上的 onStop 属性之后，当用户在手动停止 watchEffect 的监听时也会执行用户设置的回调函数 onCleanup。
 
 ### 总结
 
