@@ -41,3 +41,24 @@ const r = Reflect.set(obj, 'address', '广东')
 console.log(obj.address) // '广东'
 ```
 
+这么一看，Reflect 好像没什么特别，甚至有点画蛇添足，不急，这只是冰山一角。
+
+有一些场景我们需要监测对象的属性的设置是否成功，我们在 Vue2 的源码中看到有这么一段代码：
+
+```javascript
+export let supportsPassive = false
+if (inBrowser) {
+  try {
+    const opts = {}
+    Object.defineProperty(opts, 'passive', ({
+      get () {
+        /* istanbul ignore next */
+        supportsPassive = true
+      }
+    }: Object)) // https://github.com/facebook/flow/issues/285
+    window.addEventListener('test-passive', null, opts)
+  } catch (e) {}
+}
+```
+
+这段代码是什么意思，我们可以不用管，我们只需要注意到它使用了 try catch 来监听代码是否运行正常，这里主要监测的是 Object.defineProperty 的设置是否成功。
