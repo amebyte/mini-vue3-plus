@@ -152,9 +152,11 @@ console.log(obj.name) // 'coboy'
 ```javascript
 const proxy = new Proxy(obj, {
     get(target, key,) {
+        // 注意，这里我们没有使用 Reflect 来进行读取
         return target[key]
     },
     set(target, key, value) {
+        // 注意，这里同样没有使用 Reflect 来进行设置
         return target[key] = value
     }
 })
@@ -199,3 +201,84 @@ console.log('不阻塞了') // '不阻塞了'
 ```
 
 我们发现通过 Object.defineProperty 设置了不可修改的属性之后，我们使用 Reflect.set() 去修改的时候，它是有返回值的，并且返回值是 false。
+
+接下来再看下面的例子：
+
+```javascript
+const obj = {
+    name: 'coboy',
+    get value() {
+        console.log('value 中的 this：', this, this === obj)
+        return this.name
+    }
+}
+obj.value
+```
+
+打印出的结果是：
+
+ ![](./images/Proxy-Reflect-01.png)
+
+我们可以看到，对象 obj 的 value 属性是一个访问器属性，它返回了 this.name 属性值。我们在打印台中可以看到，this.name 的值就是 'coboy'，同时也可以得知 value 属性的访问器里面的 this 就是指向对象 obj 本身，所以 this.name 的返回值，其实就是 obj.name，自然 this.name 的返回值就是 ‘coboy’ 了。
+
+接下来我们使用 Proxy 对对象 obj 进行代理：
+
+```javascript
+const proxy = new Proxy(obj, {
+    get(target, key) {
+        return Reflect.get(target, key)
+    }   
+})
+proxy.value
+```
+
+打印出的结果是：
+
+ ![](./images/Proxy-Reflect-02.png)
+
+我们通过代理对象 proxy 去访问 value 属性，最终还是返回了 'coboy'，但我们看到 obj 的 value 属性访问器中的 this 仍然指向对象 obj。这是正确的吗？我们设想一下，将来当 effect 注册的副作用函数执行时，读取 proxy.value 属性，发现 proxy.value 是一个访问器属性，因此执行 getter 函数。由于在 getter 函数中通过 this.name 读取了 name 的属性值，那么副作用函数将要和属性 name 之间建立联系。但要建立联系，必须是响应式数据的读取才能发生，而上面的 this 是指向了 obj，obj对象是一个原始数据，并不是响应式对象，所以将无法和副作用函数建立联系。
+
+这个时候，就要说一下 Reflect.get() 的第三个参数了，先给出解决问题的代码：
+
+```javascript
+const proxy = new Proxy(obj, {
+    // 拦截读取操作，接收第三个参数 receiver
+    get(target, key, receiver) {
+        // 使用 Reflect.get 返回读取到的属性值
+        return Reflect.get(target, key, receiver)
+    }   
+})
+proxy.value
+```
+
+如上面的代码所示，代理对象的 get 拦截函数接收第三个参数 receiver，它代表谁在读取属性，例如：
+
+```javascript
+proxy.value // 代理对象 proxy 在读取 value 属性
+```
+
+我们再来看此时打印的结果：
+
+ ![](./images/Proxy-Reflect-03.png)
+
+这个时候，我们发现 obj 里的 value 访问器里的 this 就已经指向了代理对象 proxy 了。很显然这时通过响应式对象读取 name 属性，便会在副作用函数与响应式数据之间建立响应式联系，从而达到依赖收集的效果。
+
+那么这其实的奥秘到底在哪呢？接下我们再了解一下代理对象的 get 拦截函数接收第三个参数 receiver 是个啥东西。
+
+```javascript
+const proxy = new Proxy(obj, {
+    // 拦截读取操作，接收第三个参数 receiver
+    get(target, key, receiver) {
+        console.log('receiver:', receiver, receiver === proxy)
+        // 使用 Reflect.get 返回读取到的属性值
+        return Reflect.get(target, key, receiver)
+    }   
+})
+proxy.value
+```
+
+我们来看看打印结果：
+
+ ![](./images/Proxy-Reflect-04.png)
+
+代理对象的 get 拦截函数接收第三个参数 receiver 就是 响应式对象 proxy，所以 Reflect.get(target, key, receiver) 就像 Reflect.get(target, key).call(receiver) [ 模拟，伪代码 ]，改变 this 的指向。
