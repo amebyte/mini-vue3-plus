@@ -251,12 +251,6 @@ const proxy = new Proxy(obj, {
 proxy.value
 ```
 
-如上面的代码所示，代理对象的 get 拦截函数接收第三个参数 receiver，它代表谁在读取属性，例如：
-
-```javascript
-proxy.value // 代理对象 proxy 在读取 value 属性
-```
-
 我们再来看此时打印的结果：
 
  ![](./images/Proxy-Reflect-03.png)
@@ -282,3 +276,9 @@ proxy.value
  ![](./images/Proxy-Reflect-04.png)
 
 代理对象的 get 拦截函数接收第三个参数 receiver 就是 响应式对象 proxy，所以 Reflect.get(target, key, receiver) 就像 Reflect.get(target, key).call(receiver) [ 模拟，伪代码 ]，改变 this 的指向。
+
+如上面的代码所示，代理对象的 get 拦截函数接收第三个参数 receiver，它代表谁在读取属性，例如：
+
+```javascript
+proxy.value // 代理对象 proxy 在读取 value 属性
+```
