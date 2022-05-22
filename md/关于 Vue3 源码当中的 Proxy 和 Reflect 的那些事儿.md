@@ -3,8 +3,11 @@
 ### 前言
 
 什么是 Proxy 呢？ 简单来说，使用 Proxy 可以创建一个代理对象，它允许我们拦截并重新定义对一个对象的基本操作。
+
 Proxy只能够拦截对一个对象的基本操作，不能拦截对一个对象的复合操作。
+
 任何在 Proxy 的拦截器中能够找到的方法，都能够在 Reflect 中找到同名函数。
+
 Reflect.get 函数还能接收第三个参数，即指定接收者 receiver，你可以把它理解为函数调用过程中的 this。
 
 单纯 Reflect 很容易被原始的方法代替，目前也并不一定要使用 Reflect，但 Reflect + Proxy 则可以产生 1 + 1 > 2 的效果。
@@ -247,7 +250,7 @@ proxy.value
 
 我们通过代理对象 proxy 去访问 value 属性，最终还是返回了 'coboy'，但我们看到 obj 的 value 属性访问器中的 this 仍然指向对象 obj。这是正确的吗？我们设想一下，将来当 effect 注册的副作用函数执行时，读取 proxy.value 属性，发现 proxy.value 是一个访问器属性，因此执行 getter 函数。由于在 getter 函数中通过 this.name 读取了 name 的属性值，那么副作用函数将要和属性 name 之间建立联系。但要建立联系，必须是响应式数据的读取才能发生，而上面的 this 是指向了 obj，obj对象是一个原始数据，并不是响应式对象，所以将无法和副作用函数建立联系。
 
-### Proxy 和 Reflect 中的 receiver
+### Proxy 和 Reflect 中的 receiver 参数
 
 这个时候，就要说一下 Reflect.get() 的第三个参数了，先给出解决问题的代码：
 
@@ -293,3 +296,57 @@ proxy.value
 ```javascript
 proxy.value // 代理对象 proxy 在读取 value 属性
 ```
+###  Proxy 实例对象的 get 陷阱上的 receiver 参数到底指向谁？
+
+请看下面的例子：
+
+```javascript
+const obj1 = { name: 'coboy' }
+const p = new Proxy(obj1, {
+    get(target, key, receiver) {
+        console.log(receiver === p, receiver === obj2);
+        return target[key];
+    },
+});
+const obj2 = {};
+// 设置 obj2 继承代理对象 p，而代理对象 p 则是对象 obj1 的代理
+obj2.__proto__ = p
+obj2.name 
+```
+
+打印的结果：
+
+ ![](./images/Proxy-Reflect-05.png)
+
+我们可以看到 proxy 对象的 get 陷阱上打印 `receiver === p` 是为 false 的，即 Proxy 实例对象的 get 陷阱上的 receiver 参数不一定是指向代理对象实例本身，而 打印 `receiver === obj2` 则为 true，所以我们可以得知，通过   obj2.name 的访问触发了属性访问器，是 obj2 对象触发的，**所以谁触发了 get 陷阱，receiver 就指向谁**。
+
+所以为了印证这个说法，我们再看一个例子：
+
+```javascript
+const obj = {
+    name: 'coboy',
+    get value() {
+        console.log('value 中的 this：', this, this === obj2)
+        return this.name
+    }
+}
+
+const proxy = new Proxy(obj, {
+    // 拦截读取操作，接收第三个参数 receiver
+    get(target, key, receiver) {
+        // 使用 Reflect.get 返回读取到的属性值
+        return Reflect.get(target, key, receiver)
+    }   
+})
+
+const obj2 = {};
+// 设置 obj2 继承代理对象 p，而代理对象 p 则是对象 obj1 的代理
+obj2.__proto__ = proxy
+obj2.value 
+```
+
+打印结果：
+
+ ![](./images/Proxy-Reflect-06.png)
+
+由于是 obj2 触发了 value 的属性访问器，从而触发了 Proxy 中的 get 陷阱，所以此时 get 陷阱的 receiver 参数就是 obj2, 然后通过 Reflect.get() 的第三个参数改变 this 的指向，所以 obj 对象中的 value 属性访问器中的 this 就指向了 get 陷阱的 receiver 参数，也就是 obj2，而最终的打印结果也证明了这一点，所以更加证明了**谁触发了 get 陷阱，receiver 就指向谁**
