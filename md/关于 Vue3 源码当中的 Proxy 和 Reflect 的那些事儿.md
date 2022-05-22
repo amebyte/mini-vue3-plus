@@ -4,7 +4,7 @@
 
 什么是 Proxy 呢？ 简单来说，使用 Proxy 可以创建一个代理对象，它允许我们拦截并重新定义对一个对象的基本操作。
 
-Proxy只能够拦截对一个对象的基本操作，不能拦截对一个对象的复合操作。
+Proxy 只能够拦截对一个对象的基本操作，不能拦截对一个对象的复合操作。
 
 任何在 Proxy 的拦截器中能够找到的方法，都能够在 Reflect 中找到同名函数。
 
@@ -349,4 +349,17 @@ obj2.value
 
  ![](./images/Proxy-Reflect-06.png)
 
-由于是 obj2 触发了 value 的属性访问器，从而触发了 Proxy 中的 get 陷阱，所以此时 get 陷阱的 receiver 参数就是 obj2, 然后通过 Reflect.get() 的第三个参数改变 this 的指向，所以 obj 对象中的 value 属性访问器中的 this 就指向了 get 陷阱的 receiver 参数，也就是 obj2，而最终的打印结果也证明了这一点，所以更加证明了**谁触发了 get 陷阱，receiver 就指向谁**
+由于是 obj2 触发了 value 的属性访问器，从而触发了 Proxy 中的 get 陷阱，所以此时 get 陷阱的 receiver 参数就是 obj2, 然后通过 Reflect.get() 的第三个参数改变 this 的指向，所以 obj 对象中的 value 属性访问器中的 this 就指向了 get 陷阱的 receiver 参数，也就是 obj2，而最终的打印结果也证明了这一点，所以更加证明了**谁触发了 get 陷阱，receiver 就指向谁** 。
+
+
+
+### 总结
+
+在本文章中，我们了解了 Proxy 与 Reflect 的一些使用方法。Vue3 的响应式数据是基于 Proxy 实现的，Proxy 可以为其他对象创建一个代理对象，它允许我们拦截并重新定义对一个对象的基本操作。在实现代理的过程中，我们遇到了访问器属性的 this 指向问题，这说到需要使用 Reflect 来和 Proxy 一起使用并指定正确的 receiver 来解决。
+
+
+
+最后推荐一个学习vue3源码的库，它是基于崔效瑞老师的开源库mini-vue而来，在mini-vue的基础上实现更多的vue3核心功能，用于深入学习 vue3， 让你更轻松地理解 vue3 的核心逻辑。 
+
+Github地址：[mini-vue3-plus](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Famebyte%2Fmini-vue3-plus) 
+
