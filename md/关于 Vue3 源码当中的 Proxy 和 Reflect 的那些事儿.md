@@ -1,14 +1,17 @@
 # 关于 Vue3 源码当中的 Proxy 和 Reflect 的那些事儿
 
+### 前言
+
 什么是 Proxy 呢？ 简单来说，使用 Proxy 可以创建一个代理对象，它允许我们拦截并重新定义对一个对象的基本操作。
-Proxy只能够拦截对一个对象的基本操作，不能拦截对一个对象的复合操作
+Proxy只能够拦截对一个对象的基本操作，不能拦截对一个对象的复合操作。
 任何在 Proxy 的拦截器中能够找到的方法，都能够在 Reflect 中找到同名函数。
-Reflect.get 函数还能接收第三个参数，即指定接收者 receiver，你可以把它理解为函数调用过程中的 this
+Reflect.get 函数还能接收第三个参数，即指定接收者 receiver，你可以把它理解为函数调用过程中的 this。
 
-单纯 Reflect 很容易被原始的方法代替，目前也并不一定要使用 Reflect，但 Reflect + Proxy 则可以产生 1 + 1 > 2 的效果
+单纯 Reflect 很容易被原始的方法代替，目前也并不一定要使用 Reflect，但 Reflect + Proxy 则可以产生 1 + 1 > 2 的效果。
 
+修改某些 Object 方法的返回结果，让其变得更规范化。如 Object.defineProperty(obj, name, desc) 在无法定义属性时，会抛出一个错误，而 Reflect.defineProperty(obj, name, desc) 则会返回 false 。
 
-Reflect 对象与 Proxy 对象一样，也是 ES6 为了操作对象而提供的新 API。
+### Reflect 的基本操作
 
 对象读取操作
 
@@ -42,6 +45,8 @@ console.log(obj.address) // '广东'
 ```
 
 这么一看，Reflect 好像没什么特别，甚至有点画蛇添足，不急，这只是冰山一角。
+
+### Reflect 修改某些 Object 方法的返回结果，让其变得更合理
 
 有一些场景我们需要监测对象的属性的设置是否成功，我们在 Vue2 的源码中看到有这么一段代码：
 
@@ -132,6 +137,8 @@ console.log('没有阻塞')
 
 那么 Reflect 的这些到底有什么用呢？接下来我们看看 Reflect 跟 Proxy 结合的威力。
 
+### Reflect 跟 Proxy 结合的威力
+
 我们先来看看下面的例子：
 
 ```javascript
@@ -202,6 +209,8 @@ console.log('不阻塞了') // '不阻塞了'
 
 我们发现通过 Object.defineProperty 设置了不可修改的属性之后，我们使用 Reflect.set() 去修改的时候，它是有返回值的，并且返回值是 false。
 
+### 访问器属性中的 this 的指向问题
+
 接下来再看下面的例子：
 
 ```javascript
@@ -237,6 +246,8 @@ proxy.value
  ![](./images/Proxy-Reflect-02.png)
 
 我们通过代理对象 proxy 去访问 value 属性，最终还是返回了 'coboy'，但我们看到 obj 的 value 属性访问器中的 this 仍然指向对象 obj。这是正确的吗？我们设想一下，将来当 effect 注册的副作用函数执行时，读取 proxy.value 属性，发现 proxy.value 是一个访问器属性，因此执行 getter 函数。由于在 getter 函数中通过 this.name 读取了 name 的属性值，那么副作用函数将要和属性 name 之间建立联系。但要建立联系，必须是响应式数据的读取才能发生，而上面的 this 是指向了 obj，obj对象是一个原始数据，并不是响应式对象，所以将无法和副作用函数建立联系。
+
+### Proxy 和 Reflect 中的 receiver
 
 这个时候，就要说一下 Reflect.get() 的第三个参数了，先给出解决问题的代码：
 
