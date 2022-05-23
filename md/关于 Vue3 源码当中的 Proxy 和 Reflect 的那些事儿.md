@@ -212,6 +212,29 @@ console.log('不阻塞了') // '不阻塞了'
 
 我们发现通过 Object.defineProperty 设置了不可修改的属性之后，我们使用 Reflect.set() 去修改的时候，它是有返回值的，并且返回值是 false。
 
+
+### Proxy 只能够拦截对一个对象的基本操作，不能拦截对一个对象的复合操作
+
+```javascript
+const obj = {
+    name: 'coboy',
+    fn() {
+        console.log(this.name, this === p)
+    }
+}
+
+const p = new Proxy(obj, {
+    get(target, key, receiver) {
+        return Reflect.get(target, key)
+    }
+})
+
+p.fn() // 打印 'coboy', true
+```
+
+Proxy 只能够拦截对一个对象的基本操作，不能拦截对一个对象的复合操作。调用对象下的方法就是典型的非基本操作，如上面的：p.fn() 实际上调用一个对象下的方法，是由两个基本语义组成的。第一个基本语义是 get，即先通过 get 操作得到 p.fn 属性。第二个基本语义是函数调用，即通过 get 得到 p.fn 的值后再调用它。p 是代理对象，而函数中的 this 是谁调用它，它就指向谁，所以此时 fn 中的 this 就指向了代理对象 p。
+
+
 ### 访问器属性中的 this 的指向问题
 
 接下来再看下面的例子：
