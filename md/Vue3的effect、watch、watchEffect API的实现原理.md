@@ -538,6 +538,16 @@ class ReactiveEffect{
 
 我们可以看到在清除 reactive effect 实例对象的同时，如果存在 onStop 方法则执行 onStop 方法，故 watchEffect 里面把封装的函数也赋值给 reactive effect 实例对象上的 onStop 属性之后，当用户在手动停止 watchEffect 的监听时也会执行用户设置的回调函数 onCleanup。
 
+### 如何解决 watch 新老值相同的问题
+
+```javascript
+const proxy = reactive({ name: 'coboy' })
+watch(() => cloneDeep(proxy), (newVal, oldVal) => {
+    
+})
+```
+在克隆的时候，就等于深度遍历了 proxy 的每一个 key，然后每一个 key 就和当前 watch 的 reactive effect 实例对象进行了绑定。这个时候和 reactive effect 实例对象绑定的是原响应式对象，所以原响应式对象发生更改的时候，依然会触发当前 watch 的 reactive effect 实例对象的 scheduler 方法执行。
+
 ### 总结
 
 副作用函数和响应式数据之间的联系 Vue3 的最新源码是通过 ReactiveEffect 类来实现的，最新的 effect API、watch API、组件更新函数都是通过 ReactiveEffect 类来实现的。都是利用了 ReactiveEffect 类中的 run 方法执行副作用函数及可以通过调度函数控制副作用函数的执行时机。这调度时机的实现本质上是利用了 Vue3 源码中的调度器（Scheduler）和异步的微任务队列。
