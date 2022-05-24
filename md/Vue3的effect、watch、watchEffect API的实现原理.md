@@ -546,7 +546,7 @@ watch(() => cloneDeep(proxy), (newVal, oldVal) => {
     
 })
 ```
-在克隆的时候，就等于深度遍历了 proxy 的每一个 key，然后每一个 key 就和当前 watch 的 reactive effect 实例对象进行了绑定。这个时候和 reactive effect 实例对象绑定的是原响应式对象，所以原响应式对象发生更改的时候，依然会触发当前 watch 的 reactive effect 实例对象的 scheduler 方法执行。watch 里面新老值返回的都是克隆之后的响应式对象
+在克隆的时候，就等于深度遍历了 proxy 的每一个 key，然后每一个 key 就和当前 watch 的 reactive effect 实例对象进行了绑定。这个时候和 reactive effect 实例对象绑定的是原响应式对象，所以原响应式对象发生更改的时候，依然会触发当前 watch 的 reactive effect 实例对象的 scheduler 方法执行。watch 里面新老值返回的都是克隆之后的响应式对象。
 
 ### 总结
 
