@@ -555,7 +555,7 @@ const 声明的变量不会挂到 window 全局对象上，所以 this 指向 wi
 
 ```javascript
 function Fn() {
-    return () => {
+    return txt => {
         return this.txt
     }
 }
@@ -575,7 +575,24 @@ console.log(f.call(obj2)) // 'coboy'
 
 例题28
 
+```javascript
+var txt = '意外不'
+const Fn = () => txt => {
+   return this.txt
+}
 
+const obj1 = {
+    txt: 'coboy'
+}
+const obj2 = {
+    txt: 'cobyte'
+}
+
+const f = Fn.call(obj1)
+console.log(f.call(obj2)) // '意外不'
+```
+
+如果将 var 声明方式改成 const 或 let 则最后输出为 undefined，原因是使用 const 或 let 声明的变量不会挂载到 window 全局对象上。因此，this 指向 window 时，自然也找不到 txt 变量了。
 
 ### 总结
 
