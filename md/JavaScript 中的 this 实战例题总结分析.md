@@ -549,6 +549,32 @@ console.log(newGetName.call(obj2)) // undefined
 
 const 声明的变量不会挂到 window 全局对象上，所以 this 指向 window 时，自然也找不到 txt 变量了。
 
+### 箭头函数的 this 绑定无法修改
+
+例题27
+
+```javascript
+function Fn() {
+    return () => {
+        return this.txt
+    }
+}
+
+const obj1 = {
+    txt: 'coboy'
+}
+const obj2 = {
+    txt: 'cobyte'
+}
+
+const f = Fn.call(obj1)
+console.log(f.call(obj2)) // 'coboy'
+```
+
+由于 Fn 中的 this 绑定到了 obj1 上，所以 f 中的 this 也会绑定到 obj1 上， 箭头函数的绑定无法被修改。
+
+例题28
+
 
 
 ### 总结
