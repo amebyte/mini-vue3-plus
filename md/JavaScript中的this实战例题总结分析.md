@@ -158,6 +158,8 @@ const obj = {
 obj.add() // obj
 ```
 
+再次说明箭头函数的 this 是由外层函数作用域或者全局作用域决定的。
+
 ### 上下文对象调用中的 this
 
 例题9
@@ -382,7 +384,7 @@ obj.getName.apply(obj1) // this指向obj1
 obj.getName.apply() // this指向window
 ```
 
-call方法和apply方法的区别
+call 方法和 apply 方法的区别
 
 例题19
 
