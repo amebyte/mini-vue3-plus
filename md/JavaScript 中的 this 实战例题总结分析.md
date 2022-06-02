@@ -595,10 +595,10 @@ console.log(f.call(obj2)) // '意外不'
 如果将 var 声明方式改成 const 或 let 则最后输出为 undefined，原因是使用 const 或 let 声明的变量不会挂载到 window 全局对象上。因此，this 指向 window 时，自然也找不到 txt 变量了。
 
 ### 从手写 new 操作符中去理解 this 
-有一道经典的面试题，JS 的 new 操作符中发生了什么？
+有一道经典的面试题，JS 的 new 操作符到底做了什么？
 
 1. 创建一个新的空对象
-2. 把这个新的空对象的隐式原型（__proto__）指向构造函数的原型对象（prototype）
+2. 把这个新的空对象的隐式原型（`__proto__`）指向构造函数的原型对象（`prototype`）
 3. 把构造函数中的 this 指向新创建的空对象并且执行构造函数返回执行结果
 4. 判断返回的执行结果是否是引用类型，如果是引用类型则返回执行结果，new 操作失败，否则返回创建的新对象
 
@@ -611,11 +611,13 @@ function create(Fn,...args){
     // 1、创建一个空的对象
     let obj = {}; // let obj = Object.create({});
     // 2、将空对象的原型prototype指向构造函数的原型
-    Object.setPrototypeOf(obj,Fn.prototype); // obj.__proto__ = Fn.prototype
-    // 3、改变构造函数的上下文（this）,并将剩余的参数传入
+    Object.setPrototypeOf(obj,Fn.prototype); // obj.__proto__ = Fn.prototype 
+    // 以上 1、2步还可以通过 const obj = Object.create(Fn.prototype) 实现
+    // 3、改变构造函数的上下文（this）,并将参数传入
     let result = Fn.apply(obj,args);
-    // 4、在构造函数有返回值的情况进行判断
+    // 4、如果构造函数执行后，返回的结果是对象类型，则直接将该结果返回，否则返回 obj 对象
     return result instanceof Object ? result : obj;
+    // return typeof result === 'object' && result != null ? result : obj
 }
 ```
 
@@ -664,19 +666,19 @@ Function.prototype.myApply = function (context, args) {
 ```javascript
 Function.prototype.myBind = function (ctx) {
   const self = this
-  if (!({}).toString.call(self) === '[object Function]') {
-    throw TypeError('Bind must be called on a function');
+  if (!Object.prototype.toString.call(self) === '[object Function]') {
+    throw TypeError('myBind must be called on a function');
   }
 
   ctx = ctx || window;
 
-  const args = [].slice.call(arguments, 2);
+  const args = Array.prototype.slice.call(arguments, 2);
 
   /**
    * 构造函数生成对象实例
    * @returns {Object|*}
    */
-  const factory = function () {
+  const create = function () {
     const obj = {};
 
     /* 设置原型指向，确定继承关系 */
@@ -686,15 +688,16 @@ Function.prototype.myBind = function (ctx) {
      * 1、执行目标函数，绑定函数内部的属性
      * 2、如果目标函数有对象类型的返回值则取返回值，符合js new关键字的规范
      */
-    const ret = this.apply(obj, arguments);
-    return typeof ret === 'object' ? ret : obj;
+    const res = this.apply(obj, arguments);
+    return typeof res === 'object' ? ret : obj;
   };
 
   const bound = function () {
+    // new 操作符操作的时候
     if (this instanceof bound) {
-      return factory.apply(self, args.concat([].slice.call(arguments)));
+      return create.apply(self, args.concat(Array.prototype.slice.call(arguments)));
     }
-    return self.apply(ctx, args.concat([].slice.call(arguments)));
+    return self.apply(ctx, args.concat(Array.prototype.slice.call(arguments)));
   };
 
   return bound;
