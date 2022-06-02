@@ -619,7 +619,49 @@ function create(Fn,...args){
 }
 ```
 
+一般情况下构造函数没有返回值，但是作为函数，是可以有返回值的，这就解析了上面例题15和例题16的原因了。
+在 new 的时候，会对构造函数的返回值做一些判断：如果返回值是基础数据类型，则忽略返回值，如果返回值是引用数据类型，则使用 return 的返回，也就是 new 操作符无效。
 
+### 从手写 call、apply、bind 中去理解 this
+手写 call 的实现
+
+```javascript
+Function.prototype.myCall = function (context, ...args) {
+    context = context || window
+    // 创建唯一的属性防止污染
+    const key = Symbol()
+    // this 就是绑定的那个函数
+    context[key] = this
+    const result = context[key](...args)
+    delete context[key]
+    return result
+}
+```
+1. myCall 中的 this 指向谁？
+myCall 已经设置在 Function 构造函数的原型对象（prototype）上了，所以每个函数都可以调用 myCall 方法，比如函数 Fn.myCall()，根据 this 的确定规律：“谁调用它，this 就指向谁”，所以myCall方法内的 this 就指向了调用的函数，也可以说是要绑定的那个函数。
+
+2. Fn.myCall(obj) 本质就是把函数 Fn 赋值到 对象 obj 上，然后通过对象 obj.Fn() 来执行函数 Fn，那么最终又回到那个 this 的确定规律：“谁调用它，this 就指向谁”，因为对象 obj 调用了 Fn 所以 Fn 内部的 this 就指向了对象 obj。
+
+
+手写 apply 的实现
+
+apply 的实现跟 call 的实现基本是一样的，因为他们的使用方式也基本一样，只是传参的方式不一样。
+```javascript
+Function.prototype.myApply = function (context, args) {
+    context = context || window
+    // 创建唯一的属性防止污染
+    const key = Symbol()
+    // this 就是绑定的那个函数
+    context[key] = this
+    const result = context[key](...args)
+    delete context[key]
+    return result
+}
+```
+
+### 为什么 this 优先级中通过 call、apply、bind 改变的 this 要比隐式修改的 this 优先级要高
+
+通过上面的实现原理，我们就可以理解为什么上面的 this 优先级中通过 call、apply、bind 改变的 this 要比隐式修改的 this 优先级要高了。例如上面的 obj1.getName.call(obj2) 中的 getName 方法本来是通过 obj1 来调用的，但通过 call 方法之后，实际 getName 方法变成了 obj2.getName() 来执行了。
 
 
 ### 总结
