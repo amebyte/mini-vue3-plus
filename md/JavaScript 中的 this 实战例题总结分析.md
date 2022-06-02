@@ -594,6 +594,34 @@ console.log(f.call(obj2)) // '意外不'
 
 如果将 var 声明方式改成 const 或 let 则最后输出为 undefined，原因是使用 const 或 let 声明的变量不会挂载到 window 全局对象上。因此，this 指向 window 时，自然也找不到 txt 变量了。
 
+### 从手写 new 操作符中去理解 this 
+有一道经典的面试题，JS 的 new 操作符中发生了什么？
+
+1. 创建一个新的空对象
+2. 把这个新的空对象的隐式原型（__proto__）指向构造函数的原型对象（prototype）
+3. 把构造函数中的 this 指向新创建的空对象并且执行构造函数返回执行结果
+4. 判断返回的执行结果是否是引用类型，如果是引用类型则返回执行结果，new 操作失败，否则返回创建的新对象
+
+```javascript
+/*
+  create函数要接受不定量的参数，第一个参数是构造函数（也就是new操作符的目标函数），其余参数被构造函数使用。
+  new Create() 是一种js语法糖。我们可以用函数调用的方式模拟实现
+*/
+function create(Fn,...args){
+    // 1、创建一个空的对象
+    let obj = {}; // let obj = Object.create({});
+    // 2、将空对象的原型prototype指向构造函数的原型
+    Object.setPrototypeOf(obj,Fn.prototype); // obj.__proto__ = Fn.prototype
+    // 3、改变构造函数的上下文（this）,并将剩余的参数传入
+    let result = Fn.apply(obj,args);
+    // 4、在构造函数有返回值的情况进行判断
+    return result instanceof Object ? result : obj;
+}
+```
+
+
+
+
 ### 总结
 
 通过本篇内容的学习，我们看到 this 的用法纷繁多样，确实不容易掌握。但总的来说可以总结为以下几条规则：
