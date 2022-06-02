@@ -672,7 +672,7 @@ Function.prototype.myBind = function (ctx) {
 
   ctx = ctx || window;
 
-  const args = Array.prototype.slice.call(arguments, 2);
+  const args = Array.prototype.slice.call(arguments, 1);
 
   /**
    * 构造函数生成对象实例
