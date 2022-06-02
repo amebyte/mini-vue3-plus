@@ -659,7 +659,7 @@ Function.prototype.myApply = function (context, args) {
 }
 ```
 
-### 为什么 this 优先级中通过 call、apply、bind 改变的 this 要比隐式修改的 this 优先级要高
+### 为什么显式修改的 this 要比隐式修改的 this 优先级要高
 
 通过上面的实现原理，我们就可以理解为什么上面的 this 优先级中通过 call、apply、bind 改变的 this 要比隐式修改的 this 优先级要高了。例如上面的 obj1.getName.call(obj2) 中的 getName 方法本来是通过 obj1 来调用的，但通过 call 方法之后，实际 getName 方法变成了 obj2.getName() 来执行了。
 
