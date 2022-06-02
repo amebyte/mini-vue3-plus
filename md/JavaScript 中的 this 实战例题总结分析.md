@@ -659,9 +659,53 @@ Function.prototype.myApply = function (context, args) {
 }
 ```
 
-### 为什么显式修改的 this 要比隐式修改的 this 优先级要高
+手写 bind 的实现
 
-通过上面的实现原理，我们就可以理解为什么上面的 this 优先级中通过 call、apply、bind 改变的 this 要比隐式修改的 this 优先级要高了。例如上面的 obj1.getName.call(obj2) 中的 getName 方法本来是通过 obj1 来调用的，但通过 call 方法之后，实际 getName 方法变成了 obj2.getName() 来执行了。
+```javascript
+Function.prototype.myBind = function (ctx) {
+  const self = this
+  if (!({}).toString.call(self) === '[object Function]') {
+    throw TypeError('Bind must be called on a function');
+  }
+
+  ctx = ctx || window;
+
+  const args = [].slice.call(arguments, 2);
+
+  /**
+   * 构造函数生成对象实例
+   * @returns {Object|*}
+   */
+  const factory = function () {
+    const obj = {};
+
+    /* 设置原型指向，确定继承关系 */
+    obj.__proto__ = this.prototype;
+
+    /**
+     * 1、执行目标函数，绑定函数内部的属性
+     * 2、如果目标函数有对象类型的返回值则取返回值，符合js new关键字的规范
+     */
+    const ret = this.apply(obj, arguments);
+    return typeof ret === 'object' ? ret : obj;
+  };
+
+  const bound = function () {
+    if (this instanceof bound) {
+      return factory.apply(self, args.concat([].slice.call(arguments)));
+    }
+    return self.apply(ctx, args.concat([].slice.call(arguments)));
+  };
+
+  return bound;
+};
+```
+
+
+
+### 为什么显式绑定的 this 要比隐式绑定的 this 优先级要高
+
+通过上面的实现原理，我们就可以理解为什么上面的 this 优先级中通过 call、apply、bind 和 new 操作符的显式绑定的 this 要比隐式绑定的 this 优先级要高了。例如上面的 obj1.getName.call(obj2) 中的 getName 方法本来是通过 obj1 来调用的，但通过 call 方法之后，实际 getName 方法变成了 obj2.getName() 来执行了。
 
 
 ### 总结
