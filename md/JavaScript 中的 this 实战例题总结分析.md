@@ -724,24 +724,24 @@ Function.prototype.myBind = function (ctx) {
    * 构造函数生成对象实例
    * @returns {Object|*}
    */
-  const create = function () {
+  const create = function (conFn) {
     const obj = {};
 
     /* 设置原型指向，确定继承关系 */
-    obj.__proto__ = this.prototype;
+    obj.__proto__ = conFn.prototype;
 
     /**
      * 1、执行目标函数，绑定函数内部的属性
      * 2、如果目标函数有对象类型的返回值则取返回值，符合js new关键字的规范
      */
-    const res = this.apply(obj, arguments);
-    return typeof res === 'object' ? ret : obj;
+    const res = conFn.apply(obj, Array.prototype.slice.call(arguments,1));
+    return typeof res === 'object' && res != null ? res : obj;
   };
 
   const bound = function () {
     // new 操作符操作的时候
     if (this instanceof bound) {
-      return create.apply(self, args.concat(Array.prototype.slice.call(arguments)));
+      return create(self, args.concat(Array.prototype.slice.call(arguments)));
     }
     return self.apply(ctx, args.concat(Array.prototype.slice.call(arguments)));
   };
