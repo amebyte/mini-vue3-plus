@@ -456,6 +456,6 @@ Vue的Hooks设计是从React的Hooks那里借鉴过来的，React的Hooks的本�
 
 
 
-最后推荐一个学习vue3源码的库，它是基于崔效瑞老师的开源库mini-vue而来，在mini-vue的基础上实现更多的vue3核心功能，用于深入学习 vue3， 让你更轻松地理解 vue3 的核心逻辑。
+最后推荐一个学习 vue3 源码的库，它是基于崔效瑞老师的开源库 mini-vue 而来，在 mini-vue 的基础上实现更多的 vue3 核心功能，用于深入学习 vue3， 让你更轻松地理解 vue3 的核心逻辑。
 
-Github地址：[mini-vue3-plus](https://github.com/amebyte/mini-vue3-plus)
+Github 地址：[mini-vue3-plus](https://github.com/amebyte/mini-vue3-plus)

@@ -6,9 +6,13 @@
 
 面向对象语言中 this 表示当前对象的一个引用，但在 JavaScript 中 this 不是固定不变的，它会随着执行环境的改变而改变。
 
-有一种广为流传的说法是：“谁调用它，this 就指向谁”。也就是说普通函数在定义的时候无法确定 this 引用取值，因为函数没有被调用，也就没有运行的上下文环境，因此在函数中 this 的引用取值，是在函数被调用的时候确定的。
+有一种广为流传的说法是：“**谁调用它，this 就指向谁**”。也就是说普通函数在定义的时候无法确定 this 引用取值，因为函数没有被调用，也就没有运行的上下文环境，因此在函数中 this 的引用取值，是在函数被调用的时候确定的。
 
 函数在不同的情况下被调用，就会产生多种不同的运行上下文环境，所以 this 的引用取值也就是随着执 行环境的改变而改变了。
+
+还有一句经典的话：“**匿名函数的 this 永远指向 window**”，当然现在应该要加个条件限制，是在非严格模式下。
+
+还有通过 call、apply、bind 和 new 操作符改变的 this 它们谁的优先级更高呢？
 
 下面就根据具体环境来逐一分析。
 
@@ -25,7 +29,7 @@ function f1 () {
 f1() // window
 ```
 
-普通函数在非严格的全局环境下调用时，其中的 this 指向的是 window。
+普通函数在非严格的全局环境下调用时，其中的 this 指向的是 window。有一句经典的话：“**匿名函数的 this 永远指向 window**”，当然现在应该要加个条件限制，是在非严格模式下。
 
 例题2
 
@@ -58,7 +62,7 @@ const Animal = {
 Animal.getName() // window
 ```
 
-此时 this 指向 window。
+此时 this 指向 window。这里也印证了那句经典的话：“**匿名函数的 this 永远指向 window**”。
 
 如果要让 this 指向 Animal 这个对象，则可以巧用箭头函数来解决。
 
@@ -106,7 +110,7 @@ const obj = {
 obj.add(); // {name: "coboy", age: 18, add: ƒ} "coboy" 18
 ```
 
-在对象方法中，作为对象的一个方法被调用时，this 指向调用它所在方法的对象。也就是开头我们所说的那句：“谁调用了它，它就指向谁”，在这里很明显是 obj 调用了它。
+在对象方法中，作为对象的一个方法被调用时，this 指向调用它所在方法的对象。也就是开头我们所说的那句：“**谁调用了它，它就指向谁**”，在这里很明显是 obj 调用了它。
 
 例题7
 
@@ -625,7 +629,7 @@ function create(Fn,...args){
 在 new 的时候，会对构造函数的返回值做一些判断：如果返回值是基础数据类型，则忽略返回值，如果返回值是引用数据类型，则使用 return 的返回，也就是 new 操作符无效。
 
 ### 从手写 call、apply、bind 中去理解 this
-手写 call 的实现
+#### 手写 call 的实现
 
 ```javascript
 Function.prototype.myCall = function (context, ...args) {
@@ -640,16 +644,18 @@ Function.prototype.myCall = function (context, ...args) {
 }
 ```
 1. myCall 中的 this 指向谁？
-myCall 已经设置在 Function 构造函数的原型对象（prototype）上了，所以每个函数都可以调用 myCall 方法，比如函数 Fn.myCall()，根据 this 的确定规律：“谁调用它，this 就指向谁”，所以myCall方法内的 this 就指向了调用的函数，也可以说是要绑定的那个函数。
+myCall 已经设置在 Function 构造函数的原型对象（prototype）上了，所以每个函数都可以调用 myCall 方法，比如函数 Fn.myCall()，根据 this 的确定规律：“**谁调用它，this 就指向谁**”，所以myCall方法内的 this 就指向了调用的函数，也可以说是要绑定的那个函数。
 
-2. Fn.myCall(obj) 本质就是把函数 Fn 赋值到 对象 obj 上，然后通过对象 obj.Fn() 来执行函数 Fn，那么最终又回到那个 this 的确定规律：“谁调用它，this 就指向谁”，因为对象 obj 调用了 Fn 所以 Fn 内部的 this 就指向了对象 obj。
+2. Fn.myCall(obj) 本质就是把函数 Fn 赋值到 对象 obj 上，然后通过对象 obj.Fn() 来执行函数 Fn，那么最终又回到那个 this 的确定规律：“**谁调用它，this 就指向谁**”，因为对象 obj 调用了 Fn 所以 Fn 内部的 this 就指向了对象 obj。
 
+#### 手写 apply 的实现
 
-手写 apply 的实现
-
-apply 的实现跟 call 的实现基本是一样的，因为他们的使用方式也基本一样，只是传参的方式不一样。
+apply 的实现跟 call 的实现基本是一样的，因为他们的使用方式也基本一样，只是传参的方式不一样。apply 的参数必须以数组的形式传参。
 ```javascript
 Function.prototype.myApply = function (context, args) {
+    if(!Array.isArray(args)) {
+       new Error('参数必须是数组')
+    }
     context = context || window
     // 创建唯一的属性防止污染
     const key = Symbol()
@@ -661,7 +667,47 @@ Function.prototype.myApply = function (context, args) {
 }
 ```
 
-手写 bind 的实现
+#### 手写 bind 的实现
+
+bind 和 call、apply 方法的区别是它不会立即执行，它是返回一个改变了 this 指向的函数，在绑定的时候可以传参，之后执行的时候，还可以继续传参数数。这个就是一个典型的闭包行为了，是不是。
+
+我们先来实现一个简单版的：
+
+```javascript
+Function.prototype.myBind = function (ctx, ...args) {
+    // 根据上文我们可以知道 this 就是调用的那个函数
+    const self = this
+    return function bound(...newArgs) {
+        // 在再次执行的的时候去改变 this 的指向
+        return self.apply(ctx, [...args, ...newArgs])
+    }
+}
+```
+
+但是，就如之前在 this 优先级分析那里所展示的规则：bind 返回的函数如果作为构造函数通过 new 操作符进行实例化操作的话，绑定的 this 就会实效。
+
+为了实现这样的规则，我们就需要区分这两种情况的调用方式，那么怎么区分呢？首先返回出去的是 bound 函数，那么 new 操作符实例化的就是 bound 函数。通过上文  “**从手写 new 操作符中去理解 this**” 中我们可以知道当函数被 new 进行实例化的时候， 构造函数内部的 this 就是指向实例化的对象，那么判断一个函数是否是一个实例化的对象的构造函数时可以通过 intanceof 操作符判断。
+
+知识点： **instanceof** **运算符**用于检测构造函数的 `prototype` 属性是否出现在某个实例对象的原型链上。
+
+```javascript
+Function.prototype.myBind = function (ctx, ...args) {
+    // 根据上文我们可以知道 this 就是调用的那个函数
+    const self = this
+    return function bound(...newArgs) {
+        // new Fn 的时候， this 是 Fn 的实例对象
+        if(this instanceof Fn) {
+            return new self(...args, ...newArgs)
+        }
+        // 在再次执行的的时候去改变 this 的指向
+        return self.apply(ctx, [...args, ...newArgs])
+    }
+}
+```
+
+另外我们也可以通过上文的实现 new 操作符的代码来实现 bind 里面的 new 操作。
+
+完整的复杂版：
 
 ```javascript
 Function.prototype.myBind = function (ctx) {
@@ -669,8 +715,8 @@ Function.prototype.myBind = function (ctx) {
   if (!Object.prototype.toString.call(self) === '[object Function]') {
     throw TypeError('myBind must be called on a function');
   }
-
-  ctx = ctx || window;
+  // 对 context 进行深拷贝，防止 bind 执行后返回函数未执行期间，context 被修改
+  ctx = JSON.parse(JSON.stringify(ctx)) || window;
 
   const args = Array.prototype.slice.call(arguments, 1);
 
@@ -720,3 +766,10 @@ Function.prototype.myBind = function (ctx) {
 - 一般通过 call、apply、bind 方法显式调用函数时，函数体内的 this 会被绑定到指定参数的对象上，显式绑定的 this 要比隐式绑定的 this 优先级要高。
 - 一般通过上下文对象调用函数时，函数体内的 this 会被绑定到该对象上。
 - 在箭头函数中，this 的指向是由外层（函数或全局）作用域来决定的。
+
+
+
+
+最后推荐一个学习 vue3 源码的库，它是基于崔效瑞老师的开源库 mini-vue 而来，在 mini-vue 的基础上实现更多的 vue3 核心功能，用于深入学习 vue3， 让你更轻松地理解 vue3 的核心逻辑。
+
+Github 地址：[mini-vue3-plus](https://github.com/amebyte/mini-vue3-plus)
