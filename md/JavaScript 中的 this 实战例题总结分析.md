@@ -12,7 +12,7 @@
 
 还有一句经典的话：“**匿名函数的 this 永远指向 window**”。
 
-还有通过 call、apply、bind 和 new 操作符改变的 this 它们谁的优先级更高呢？还有它们的实现原理是怎么样的呢？最后我们手写实现 call、apply、bind 和 new 操作符。
+还有通过 call、apply、bind 和 new 操作符改变的 this 它们谁的优先级更高呢？还有它们的实现原理是怎么样的呢？最后我们手写实现 call、apply、bind 和 new 操作符来进一步理解 this。
 
 下面先根据具体环境来逐一分析。
 
