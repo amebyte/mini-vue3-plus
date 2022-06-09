@@ -775,32 +775,32 @@ Function.prototype.myBind = function (ctx) {
 ### 关于 this 的一些冷知识
 
 ```javascript
-    const obj = {
-        txt: 'cobyte',
-        getTxt: function () {
-            console.log(this.txt)
-        }
+const obj = {
+    txt: 'cobyte',
+    getTxt: function () {
+        console.log(this.txt)
     }
-    ;(0, obj.getTxt)()
+}
+;(0, obj.getTxt)()
 ```
 这个时候打印的则是 undefined， 因为这个时候 this 指向了 window。
-这其中的原因是因为：
-逗号操作符  对它的每个操作数求值（从左到右），并返回最后一个操作数的值。
+这其中的原理则是：
+**逗号操作符**：  对它的每个操作数求值（从左到右），并返回最后一个操作数的值。
 
 所以 obj.getTxt 返回的值是：
 
 ```javascript
-     function () {
-        console.log(this.txt)
-    }
+function () {
+    console.log(this.txt)
+}
 ```
 
 ;(0, obj.getTxt)() 则相当于
 
 ```javascript
-    (0, function () {
-        console.log(this.txt)
-    })()
+(0, function () {
+    console.log(this.txt)
+})()
 ```
 
 所以这又回到了本文篇讲的那句：“**匿名函数的 this 永远指向 window**”。
