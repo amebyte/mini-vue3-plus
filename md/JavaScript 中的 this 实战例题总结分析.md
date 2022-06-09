@@ -14,6 +14,8 @@
 
 还有通过 call、apply、bind 和 new 操作符改变的 this 它们谁的优先级更高呢？还有它们的实现原理是怎么样的呢？最后我们手写实现 call、apply、bind 和 new 操作符来进一步理解 this。
 
+**最后我们还会说一下关于 this 的一些冷知识**。
+
 下面先根据具体环境来逐一分析。
 
 ### 普通函数中的 this
@@ -769,6 +771,39 @@ Function.prototype.myBind = function (ctx) {
 ### 为什么显式绑定的 this 要比隐式绑定的 this 优先级要高
 
 通过上面的实现原理，我们就可以理解为什么上面的 this 优先级中通过 call、apply、bind 和 new 操作符的显式绑定的 this 要比隐式绑定的 this 优先级要高了。例如上面的 obj1.getName.call(obj2) 中的 getName 方法本来是通过 obj1 来调用的，但通过 call 方法之后，实际 getName 方法变成了 obj2.getName() 来执行了。
+
+### 关于 this 的一些冷知识
+
+```javascript
+    const obj = {
+        txt: 'cobyte',
+        getTxt: function () {
+            console.log(this.txt)
+        }
+    }
+    ;(0, obj.getTxt)()
+```
+这个时候打印的则是 undefined， 因为这个时候 this 指向了 window。
+这其中的原因是因为：
+逗号操作符  对它的每个操作数求值（从左到右），并返回最后一个操作数的值。
+
+所以 obj.getTxt 返回的值是：
+
+```javascript
+     function () {
+        console.log(this.txt)
+    }
+```
+
+;(0, obj.getTxt)() 则相当于
+
+```javascript
+    (0, function () {
+        console.log(this.txt)
+    })()
+```
+
+所以这又回到了本文篇讲的那句：“**匿名函数的 this 永远指向 window**”。
 
 
 ### 总结
