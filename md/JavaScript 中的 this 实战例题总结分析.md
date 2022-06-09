@@ -144,7 +144,21 @@ const obj = {
 obj.add() // window
 ```
 
-如果在对象方法内部声明一个函数，这个函数的 this 在对象方法执行的时候指向就不是这个对象了，而是指向 window 了。
+如果在对象方法内部声明一个函数，这个函数的 this 在对象方法执行的时候指向就不是这个对象了，而是指向 window 了。这里为什么会指向 window 呢？上述代码中声明了一个 fn 函数，接着又马上执行了它，其实可以看做是一个匿名的自执行函数，代码可以变成如下：
+
+```javascript
+const obj = {
+    name: "coboy", 
+    age: 18, 
+    add: function() {
+        (function() {
+            console.log(this)
+        })()
+    }
+};
+obj.add() // window
+```
+我们再回溯一下本文开头说到的那句经典的话：“**匿名函数的 this 永远指向 window**”，所为为什么指向 window，是不是很清楚了呢。
 
 同样想要 this 指向 obj 可以通过箭头函数来实现：
 
