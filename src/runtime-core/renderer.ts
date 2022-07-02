@@ -291,7 +291,7 @@ export function createRenderer(options) {
       // 中间对比
       let s1 = i
       let s2 = i
-
+      // 剩下需要比对的长度
       let toBePatched = e2 - s2 + 1
       let patched = 0
       const keyToNewIndexMap = new Map()
