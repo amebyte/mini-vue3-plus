@@ -347,8 +347,8 @@ export function createRenderer(options) {
           if(newIndexToOldIndexMap[i] === 0) {
             patch(null, nextChild, container, parentComponent, anchor)
           } else if(moved) {
+            // 如果不在最长递增子序列里面则要进行移动
             if(j < 0 || i !== increasingNewIndexSequence[j]) {
-                console.log('移动位置')
                 hostInsert(nextChild.el, container, anchor)
             } else {
                 j--
