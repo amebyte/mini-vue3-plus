@@ -30,7 +30,7 @@ const arrayMethods = Object.create(arrayProto)
 })
 ```
 
-
+使用拦截器覆盖 Array 原型
 
 
 
