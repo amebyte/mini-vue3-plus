@@ -3,6 +3,8 @@ Vue2中是通过改写数组的那个七个方法来来实现的
 
 为什么 Object.defineProperty 明明能监听到数组值的变化，而 Vue 却没有实现？
 
+拦截器
+
 ```javascript
 const arrayProto = Array.prototype
 const arrayMethods = Object.create(arrayProto)
