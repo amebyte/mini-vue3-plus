@@ -35,6 +35,7 @@ const arrayMethods = Object.create(arrayProto)
 将拦截器方法挂载到数组的属性上
 
 如何收集依赖
+收集依赖
 
 
 
