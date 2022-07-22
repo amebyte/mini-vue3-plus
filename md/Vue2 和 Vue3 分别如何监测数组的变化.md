@@ -36,6 +36,7 @@ const arrayMethods = Object.create(arrayProto)
 
 如何收集依赖
 收集依赖
+在拦截器中获取 Observer 实例
 
 
 
