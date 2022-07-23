@@ -1,4 +1,6 @@
 # Vue2 和 Vue3 分别如何监测数组的变化
+defineProperty 真的不能监测数组变化吗？面试中被问到这个问题，你要如何回答？
+
 Vue2中是通过改写数组的那个七个方法来来实现的
 
 为什么 Object.defineProperty 明明能监听到数组值的变化，而 Vue 却没有实现？
