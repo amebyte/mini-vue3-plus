@@ -187,17 +187,44 @@ function del(target, key) {
 
 通过  `vm.$delete` 和 `vm.$set` 的实现原理，我们可以更加清晰地理解到 Observer 类的作用，Observer 类就是给一个对象也进行一个监测，因为 Object.defineProperty 是无法实现对对象的监测的，但这个监测是手动，不是自动的。
 
-### 问题3：Vue2 中是怎么监测数组的变化的？
+### 问题3：Object.defineProperty 真的不能监听数组的变化吗？
+
+面试官一上来可能先问你 Vue2 中数组的响应式原理是怎么样的，这个问题你也许会觉得很容易回答，Vue2 对数组的监测是通过重写数组原型上的 7 个方法来实现，然后你会说具体的实现，接下来面试官可能会问你，为什么要改写数组原型上的 7 个方法，而不使用 Object.defineProperty，是因为 Object.defineProperty 真的不能监听数组的变化吗？
+
+其实 Object.defineProperty 是可以监听数组的变化的。
+
+```javascript
+const arr = [1, 2, 3]
+arr.forEach((val, index) => {
+  Object.defineProperty(arr, index, {
+    get() {
+      console.log('监听到了')
+      return val
+    },
+    set(newVal) {
+      console.log('变化了：', val, newVal)
+      val = newVal
+    }
+  })
+})
+```
+其实数组就是一个特殊的对象，它的下标就可以看作是它的 key。
+
+ ![](./images/vue2-arry-defineProperty-01.png)
+
+所以 Object.defineProperty 也能监听数组变化，那么为什么 Vue2 弃用了这个方案呢？
+
+首先这种直接通过下标获取数组元素的场景就比较少，其次即便通过了 Object.defineProperty 对数组进行监听，但也监听不了 push、pop、shift 等对数组进行操作的方法，所以还是需要通过对数组那 7 个方法进行重写监听。所以为了性能考虑 Vue2 直接弃用了使用 Object.defineProperty 对数组进行监听的方案。
+
+### 问题4：Vue2 中是怎么监测数组的变化的？
 
 
 
-
-
-### 问题4：Vue3 的响应式原理又是怎么样的？
+### 问题5：Vue3 的响应式原理又是怎么样的？
 
 
 
-### 问题5：Vue3 中又是怎么监测数组的变化的？
+### 问题6：Vue3 中又是怎么监测数组的变化的？
 
 
 
