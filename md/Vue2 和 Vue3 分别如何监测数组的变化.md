@@ -21,18 +21,13 @@ Vue3 中又是怎么监测数组的变化的？
 
 我们知道 Vue2 的对象数据是通过 Object.defineProperty 对每个属性进行监听，当对属性进行读取的时候，就会触发 getter，对属性进行设置的时候，就会触发 setter。
 
-那么是什么地方进行属性读取呢？就是在 Watcher 里面，Watcher 也就是所谓的依赖。在 Watcher 里面读取数据的时候，会把自己设置到一个全局的变量中。
-
-在 Watcher 读取数据的时候也就触发了这个属性的监听 getter，在 getter 里面就需要进行依赖收集，这些依赖存储的地方就叫 Dep，在 Dep 里面就可以把全局变量中的依赖进行收集，收集完毕就会把全局依赖变量设置为空。将来数据发生变化的时候，就去 Dep 中把相关的 Watcher 拿出来执行一遍。
-
-最简单的代码演示：
-
 ```javascript
 /**
 * 这里的函数 defineReactive 用来对 Object.defineProperty 进行封装。
 **/
 function defineReactive(data, key, val) {
-   let dep = new Dep()
+   // 依赖存储的地方
+   const dep = new Dep()
    Object.defineProperty(data, key, {
        enumerable: true,
        configurable: true,
@@ -48,12 +43,45 @@ function defineReactive(data, key, val) {
        }
    }) 
 }
+```
 
+那么是什么地方进行属性读取呢？就是在 Watcher 里面，Watcher 也就是所谓的依赖。在 Watcher 里面读取数据的时候，会把自己设置到一个全局的变量中。
+
+```javascript
+/**
+* 我们所讲的依赖其实就是 Watcher，我们要通知用到数据的地方，而使用这个数据的地方有很多，类型也不一样，有* 可能是组件的，有可能是用户写的 watch，我们就需要抽象出一个能集中处理这些情况的类。
+**/
+class Watcher {
+    constructor(vm, exp, cb) {
+        this.vm = vm
+        this.getter = exp
+        this.cb = cb
+        this.value = this.get()
+    }
+
+    get() {
+        Dep.target = this
+        let value = this.getter.call(this.vm, this.vm)
+        Dep.target = undefined
+        return value
+    }
+
+    update() {
+        const oldValue = this.value
+        this.value = this.get()
+        this.cb.call(this.vm, this.value, oldValue)
+    }
+}
+```
+
+在 Watcher 读取数据的时候也就触发了这个属性的监听 getter，在 getter 里面就需要进行依赖收集，这些依赖存储的地方就叫 Dep，在 Dep 里面就可以把全局变量中的依赖进行收集，收集完毕就会把全局依赖变量设置为空。将来数据发生变化的时候，就去 Dep 中把相关的 Watcher 拿出来执行一遍。
+
+```javascript
 /**
 * 我们把依赖收集的代码封装成一个 Dep 类，它专门帮助我们管理依赖。
 * 使用这个类，我们可以收集依赖、删除依赖或者向依赖发送通知等。
 **/
-class Dep{
+class Dep {
     constructor() {
         this.subs = []
     }
@@ -89,46 +117,87 @@ function remove(arr, item) {
         } 
     }
 }
+```
 
-/**
-* 我们所讲的依赖其实就是 Watcher，我们要通知用到数据的地方，而使用这个数据的地方有很多，类型也不一样，有* 可能是组件的，有可能是用户写的 watch，我们就需要抽象出一个能集中处理这些情况的类型。
-**/
-class Watcher{
-    constructor(vm, exp, cb) {
-        this.vm = vm
-        this.getter = exp
-        this.cb = cb
-        this.value = this.get()
+### 问题2：为什么 Vue2 新增响应式属性要通过额外的 API？
+
+这是因为 Object.defineProperty 只会对属性进行监测，而不会对对象进行监测，为了可以监测对象 Vue2 创建了一个 Observer 类。Observer 类的作用就是把一个对象全部转换成响应式对象，包括子属性数据，当对象新增或删除属性的时候负债通知对应的 Watcher 进行更新操作。
+
+```javascript
+// 定义一个属性
+function def(obj, key, val, enumerable) {
+    Object.defineProperty(obj, key, {
+        value: val,
+        enumerable: !!enumerable,
+        writable: true,
+        configurable: true
+    })
+}
+
+class Observer {
+    constructor(value) {
+        this.value = value
+        // 添加一个对象依赖收集的选项
+        this.dep = new Dep()
+        // 给响应式对象添加 __ob__ 属性，表明这是一个响应式对象
+        def(value, '__ob__', this)
+        if(Array.isArray(value)) {
+           
+        } else {
+            this.walk(value)
+        }
     }
-
-    get() {
-        Dep.target = this
-        let value = this.getter.call(this.vm, this.vm)
-        Dep.target = undefined
-        return value
-    }
-
-    update() {
-        const oldValue = this.value
-        this.value = this.get()
-        this.cb.call(this.vm, this.value, oldValue)
+    
+    walk(obj) {
+        const keys = Object.keys(obj)
+        // 遍历对象的属性进行响应式设置
+        for(let i = 0; i < keys.length; i ++) {
+            defineReactive(obj, keys[i], obj[keys[i]])
+        }
     }
 }
 ```
 
+**vm.$set 的实现原理**
+
+```javascript
+function set(target, key, val) {
+    const ob = target.__ob__
+    defineReactive(ob.value, key, val)
+    ob.dep.notify()
+    return val
+}
+```
+
+当向一个响应式对象新增属性的时候，需要对这个属性重新进行响应式的设置，即使用 defineReactive 将新增的属性转换成 getter/setter。
+
+我们在前面讲过每一个对象是会通过 Observer 类型进行包装的，并在 Observer 类里面创建一个属于这个对象的依赖收集存储对象 dep， 最后在新增属性的时候就通过这个依赖对象进行通知相关 Watcher 进行变化更新。
+
+**vm.$delete 的实现原理**
+
+```javascript
+function del(target, key) {
+    const ob = target.__ob__
+    delete target[key]
+    ob.dep.notify()
+}
+```
+
+我们可以看到 `vm.$delete` 的实现原理和 `vm.$set` 的实现原理是非常相似的。
+
+通过  `vm.$delete` 和 `vm.$set` 的实现原理，我们可以更加清晰地理解到 Observer 类的作用，Observer 类就是给一个对象也进行一个监测，因为 Object.defineProperty 是无法实现对对象的监测的，但这个监测是手动，不是自动的。
+
+### 问题3：Vue2 中是怎么监测数组的变化的？
 
 
-### 问题2：Vue2 中是怎么监测数组的变化的？
 
 
 
-
-
-### 问题3：Vue3 的响应式原理又是怎么样的？
+### 问题4：Vue3 的响应式原理又是怎么样的？
 
 
 
-### 问题4：Vue3 中又是怎么监测数组的变化的？
+### 问题5：Vue3 中又是怎么监测数组的变化的？
 
 
 
