@@ -385,9 +385,54 @@ function trgger(target, key) {
 
 ### 问题6：Vue3 中是怎么监测数组的变化的？
 
-实际上，在 JavaScript 中，数组只是一个特殊的对象而已，因此想要更好地实现对数组的代理，就有必要了解相比普通对象，数组到底有何特殊之处。首先对数组的读取操作要比普通对象丰富得多了，
+我们知道在 Vue2 中是需要对数组的监听进行特殊的处理的，其中在 Vue3 中也需要对数组进行特殊的处理。在 Vue2 是不可以通过数组下标对响应式数组进行设置和读取的，而 Vue3 中是可以的，数组中仍然有很多其他特别的读取和设置的方法，这些方法没经过特殊处理，是无法通过普通的 Proxy 中的 getter/setter 进行响应式处理的。
+
+数组中对属性或元素进行读取的操作方法。
+
+- 通过索引访问数组的元素值
+- 访问数组的长度
+- 把数组作为对象，使用 for ... in 循环遍历
+- 使用 for ... of 迭代遍历数组
+- 数组的原型方法，如 concat、join、every、some、find、findIndex、includes 等
+
+数组中对属性或元素进行设置的操作方法。
+
+- 通过索引修改数组的元素值
+- 修改数组的长度
+- 数组的栈方法
+- 修改原数组的原型方法：splice、fill、sort 等
+
+
+
+ ![](./images/Vue3-proxy-arry-01.png)
+
+
 
 数组的原型方法： contat、join、every、some、find、findIndex、includes
+
+在 Vue3 中也需要像 Vue2 那样对一些数组原型上发方法进行重写
+
+```javascript
+const arrayInstrumentations = {}
+// 是否允许追踪依赖变化
+let shouldTrack = true
+// 重写数组的 push、pop、shift、unshift、splice 方法
+;['push','pop','shift', 'unshift', 'splice'].forEach(method => {
+    // 取得原始的数组原型上的方法
+    const originMethod = Array.prototype[method]
+    // 重写
+    arrayInstrumentations[method] = function(...args) {
+        // 在调用原始方法之前，禁止追踪
+        shouldTrack = false
+        // 调用数组的默认方法
+        let res = originMethod.apply(this, args)
+        // 在调用原始方法之后，恢复允许进行依赖追踪
+        shouldTrack = true
+        return res
+    }
+})
+
+```
 
 
 
