@@ -408,6 +408,30 @@ function trgger(target, key) {
 
 遍历数组，使用 for ... in 循环遍历数组与遍历常规对象是一致的，也可以使用 ownKeys 拦截器进行设置。而影响 for ... in 循环对数组的遍历会是添加新元素：arr[0] = 1 或者修改数组长度：arr.length = 0，其实无论是为数组添加新元素，还是直接修改数组的长度，本质上都是因为修改了数组的 length 属性。所以在 ownKeys 拦截器内进行判断，如果是数组的话，就使用 length  属性作为 key 去建立响应联系。
 
+**在 Vue3 中也需要像 Vue2 那样对一些数组原型上发方法进行重写。**
+
+当数组响应式对象使用 includes、indexOf、lastIndexOf 这方法的时候，它们内部的 this 指向的是代理对象，并且在获取数组元素时得到的值要也是代理对象，所以当使用原始值去数组响应式对象中查找的时候，如果不进行特别的处理，是查找不到的，所以我们需要对上述的数组方法进行重写才能解决这个问题。
+
+首先 arr.indexOf 可以理解为读取响应式对象 arr 的 indexOf 属性，这就会触发 getter 拦截器，在 getter 拦截器内我们就可以判断 target 是否是数组，如果是数组就看读取的属性是否是我们需要重写的属性，如果是，则使用我们重新之后的方法。
+
+```javascript
+const arrayInstrumentations = {}
+;(['includes', 'indexOf', 'lastIndexOf']).forEach(key => {
+  const originMethod = Array.prototype[key]
+  arrayInstrumentations[key] = function(...args) {
+    // this 是代理对象，先在代理对象中查找
+    let res = originMethod.apply(this, args)
+
+    if(res === false) {
+       // 在代理对象中没找到，则去原始数组中查找
+       res = originMethod.apply(this.raw, args)
+    }
+    // 返回最终的值
+    return res
+  }
+})
+```
+
 
 
 
@@ -416,9 +440,7 @@ function trgger(target, key) {
 
 
 
-数组的原型方法： contat、join、every、some、find、findIndex、includes
 
-在 Vue3 中也需要像 Vue2 那样对一些数组原型上发方法进行重写
 
 ```javascript
 const arrayInstrumentations = {}
