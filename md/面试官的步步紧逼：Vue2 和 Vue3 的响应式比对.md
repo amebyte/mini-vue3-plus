@@ -253,13 +253,75 @@ const arrayMethods = Object.create(arrayProto)
 
 所以通过拦截器之后，我们就可以追踪到数组的变化了，然后就可以在拦截器里面进行依赖收集和触发依赖了。
 
-接下来我们就使用拦截器覆盖那些进行了响应式处理的 Array 原型
+接下来我们就使用拦截器覆盖那些进行了响应式处理的 Array 原型，数组也是一个对象，通过上文我们可以知道 Vue2 是在 Observer 类里面对对象的进行响应式处理，并且给对象也进行一个依赖收集。所以对数组的依赖处理也是在 Observer 类里面。
 
-将拦截器方法挂载到数组的属性上
+```javascript
+class Observer {
+    constructor(value) {
+        this.value = value
+        // 添加一个对象依赖收集的选项
+        this.dep = new Dep()
+        // 给响应式对象添加 __ob__ 属性，表明这是一个响应式对象
+        def(value, '__ob__', this)
+        // 如果是数组则通过覆盖数组的原型方法进来拦截操作
+        if(Array.isArray(value)) {
+          value.__proto__ = arrayMethods 
+        } else {
+            this.walk(value)
+        }
+    }
+    // ...
+}
+```
 
-如何收集依赖
-收集依赖
-在拦截器中获取 Observer 实例
+在这个地方 Vue2 会进行一些兼容性的处理，如果能使用 `__proto__` 就覆盖原型，如果不能使用，则直接把那 7 个操作数组的方法直接挂载到需要被进行响应式处理的数组上，因为当访问一个对象的方法时，只有这个对象自身不存在这个方法，才会去它的原型上查找这个方法。
+
+数组如何收集依赖呢？
+
+我们知道在数组进行响应式初始化的时候会在 Observer 类里面给这个数组对象的添加一个 `__ob__` 的属性，这个属性的值就是 Observer 这个类的实例对象，而这个 Observer 类里面有存在一个收集依赖的属性 dep，所以在对数组里的内容通过那 7 个方法进行操作的时候，会触发数组的拦截器，那么在拦截器里面就可以访问到这个数组的 Observer 类的实例对象，从而可以向这些数组的依赖发送变更通知。
+
+```javascript
+// 拦截器其实就是一个和 Array.prototype 一样的对象。
+const arrayProto = Array.prototype
+const arrayMethods = Object.create(arrayProto)
+;[
+    'push',
+    'pop',
+    'shift',
+    'unshift',
+    'splice',
+    'sort',
+    'reverse'
+].forEach(function (method) {
+    // 缓存原始方法
+    const original = arrayProto[method]
+    Object.defineProperty(arrayMethods, method, {
+        value: function mutator(...args) {
+            // 最终还是使用原生的 Array 原型方法去操作数组
+            const result = original.apply(this, args)
+            // 获取 Observer 对象实例
+            const ob = this.__ob__
+            // 通过 Observer 对象实例上 Dep 实例对象去通知依赖进行更新
+            ob.dep.notify()
+        },
+        eumerable: false,
+        writable: false,
+        configurable: true
+    })
+})
+```
+
+因为 Vue2 的实现方法决定了在 Vue2 中对数组的一些操作无法实现响应式操作，例如：
+
+this.list[0] = xxx
+
+由于 Vue2 放弃了 Object.defineProperty 对数组进行监听的方案，所以通过下标操作数组是无法实现响应式操作的。
+
+又例如：
+
+this.list.length = 0
+
+这个动作在 Vue2 中也是无法实现响应式操作的。
 
 ### 问题5：Vue3 的响应式原理又是怎么样的？
 
