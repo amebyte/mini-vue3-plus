@@ -1,4 +1,4 @@
-# 面试官的步步紧逼：Vue2 和 Vue3 分别如何监测数组的变化
+# 面试官的步步紧逼：Vue2 和 Vue3 的响应式比对
 ### 前言
 
 技术栈是 Vue 的同学，在面试中难免会被问到 Vue2 和 Vue3 的相关知识点的实现原理和比较，而且面试官是步步紧逼，一环扣一环。
@@ -214,29 +214,18 @@ arr.forEach((val, index) => {
 
 所以 Object.defineProperty 也能监听数组变化，那么为什么 Vue2 弃用了这个方案呢？
 
-首先这种直接通过下标获取数组元素的场景就比较少，其次即便通过了 Object.defineProperty 对数组进行监听，但也监听不了 push、pop、shift 等对数组进行操作的方法，所以还是需要通过对数组那 7 个方法进行重写监听。所以为了性能考虑 Vue2 直接弃用了使用 Object.defineProperty 对数组进行监听的方案。
+首先这种直接通过下标获取数组元素的场景就比较少，其次即便通过了 Object.defineProperty 对数组进行监听，但也监听不了 push、pop、shift 等对数组进行操作的方法，所以还是需要通过对数组原型上的那 7 个方法进行重写监听。所以为了性能考虑 Vue2 直接弃用了使用 Object.defineProperty 对数组进行监听的方案。
 
 ### 问题4：Vue2 中是怎么监测数组的变化的？
 
+通过上文我们知道如果使用 Object.defineProperty 对数组进行监听，当通过 Array 原型上的方法改变数组内容的时候是无发触发 getter/setter 的， Vue2 中是放弃了使用 Object.defineProperty 对数组进行监听的方案，而是通过对数组原型上的 7 个方法进行重写进行监听的。
 
-
-### 问题5：Vue3 的响应式原理又是怎么样的？
-
-
-
-### 问题6：Vue3 中又是怎么监测数组的变化的？
-
-
-
-Vue2.x 监测数组变更的两条限制：不能监听利用索引直接设置一个数组项，不能监听直接修改数组的长度，是因为 defineProperty 的限制么？
-
-Vue2中是通过改写数组的那个七个方法来来实现的
-
-为什么 Object.defineProperty 明明能监听到数组值的变化，而 Vue 却没有实现？
+原理就是使用拦截器覆盖 Array.prototype，之后再去使用 Array 原型上的方法的时候，其实使用的是拦截器提供的方法，在拦截器里面才真正使用原生 Array 原型上的方法去操作数组。
 
 拦截器
 
 ```javascript
+// 拦截器其实就是一个和 Array.prototype 一样的对象。
 const arrayProto = Array.prototype
 const arrayMethods = Object.create(arrayProto)
 ;[
@@ -252,6 +241,7 @@ const arrayMethods = Object.create(arrayProto)
     const original = arrayProto[method]
     Object.defineProperty(arrayMethods, method, {
         value: function mutator(...args) {
+            // 最终还是使用原生的 Array 原型方法去操作数组
             return original.apply(this, args)
         },
         eumerable: false,
@@ -261,13 +251,25 @@ const arrayMethods = Object.create(arrayProto)
 })
 ```
 
-使用拦截器覆盖 Array 原型
+所以通过拦截器之后，我们就可以追踪到数组的变化了，然后就可以在拦截器里面进行依赖收集和触发依赖了。
+
+接下来我们就使用拦截器覆盖那些进行了响应式处理的 Array 原型
 
 将拦截器方法挂载到数组的属性上
 
 如何收集依赖
 收集依赖
 在拦截器中获取 Observer 实例
+
+### 问题5：Vue3 的响应式原理又是怎么样的？
+
+
+
+### 问题6：Vue3 中又是怎么监测数组的变化的？
+
+
+
+
 
 
 
