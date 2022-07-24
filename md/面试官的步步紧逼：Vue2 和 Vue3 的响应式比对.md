@@ -325,16 +325,70 @@ this.list.length = 0
 
 ### 问题5：Vue3 的响应式原理是怎么样的？
 
+Vue3 是通过 Proxy 实现对数据实现 getter/setter 代理，从而实现响应式数据，然后在副作用函数中读取响应式数据的时候，就会触发 Proxy 的 getter，在 getter 里面把对当前的副作用函数保存起来，将来对应响应式数据发生更改的话，则把之前保存起来的副作用函数取出来执行。
+
+当前的响应式对象，当前读取数据属性 key，进行一定规则的依赖收集保存操作。
+
+```javascript
+// 使用一个全局变量存储被注册的副作用函数
+let activeEffect
+// 注册副作用函数
+function effect(fn) {
+    activeEffect = fn
+    fn()
+}
+const obj = new Proxy(data, {
+    // getter 拦截读取操作
+    get(target, key) {
+        // 将副作用函数 activeEffect 添加到存储副作用函数的全局变量 targetMap 中
+        track(target, key)
+        // 返回读取的属性值
+        return Reflect.get(target, key)
+    },
+    // setter 拦截设置操作
+    set(target, key, val) {
+        // 设置属性值
+        const result = Reflect.set(target, key, val)
+        // 把之前存储的副作用函数取出来并执行
+        trigger(target, key)
+        return result
+    }
+})
+// 存储副作用函数的全局变量
+const targetMap = new WeakMap()
+// 在 getter 拦截器内追踪依赖的变化
+function track(target, key) {
+    if(!activeEffect) return
+    let depsMap = targetMap.get(target)
+    if(!depsMap) {
+       depsMap = new Map()
+       targetMap.set(target, depsMap)
+    }
+    
+    let deps = depsMap.get(key)
+    if(!deps) {
+       deps = new Set()
+       depsMap.set(key, deps)
+    }
+    deps.add(activeEffect)
+}
+// 在 setter 拦截器中触发相关依赖
+function trgger(target, key) {
+    const depsMap = targetMap.get(target)
+    if(!depsMap) return
+    const effects = depsMap.get(key)
+    effects && effects.forEach(fn => fn())
+}
+```
+
 
 
 ### 问题6：Vue3 中是怎么监测数组的变化的？
 
-
-
-
-
-
-
 实际上，在 JavaScript 中，数组只是一个特殊的对象而已，因此想要更好地实现对数组的代理，就有必要了解相比普通对象，数组到底有何特殊之处。首先对数组的读取操作要比普通对象丰富得多了，
 
 数组的原型方法： contat、join、every、some、find、findIndex、includes
+
+
+
+### 总结
