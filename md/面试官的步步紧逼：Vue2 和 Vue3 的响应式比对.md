@@ -45,7 +45,7 @@ function defineReactive(data, key, val) {
 }
 ```
 
-那么是什么地方进行属性读取呢？就是在 Watcher 里面，Watcher 也就是所谓的依赖。在 Watcher 里面读取数据的时候，会把自己设置到一个全局的变量中。
+那么是什么地方进行属性读取呢？就是在 Watcher 里面，Watcher 也就是所谓的依赖。在 Watcher 里面读取数据的时候，会把自己设置到一个**全局的变量**中。
 
 ```javascript
 /**
@@ -74,7 +74,7 @@ class Watcher {
 }
 ```
 
-在 Watcher 读取数据的时候也就触发了这个属性的监听 getter，在 getter 里面就需要进行依赖收集，这些依赖存储的地方就叫 Dep，在 Dep 里面就可以把全局变量中的依赖进行收集，收集完毕就会把全局依赖变量设置为空。将来数据发生变化的时候，就去 Dep 中把相关的 Watcher 拿出来执行一遍。
+在 Watcher 读取数据的时候也就触发了这个属性的监听 getter，在 getter 里面就需要进行依赖收集，这些依赖存储的地方就叫 Dep，在 Dep 里面就可以把**全局变量中的依赖**进行收集，收集完毕就会把**全局依赖变量**设置为空。将来数据发生变化的时候，就去 Dep 中把相关的 Watcher 拿出来执行一遍。
 
 ```javascript
 /**
@@ -120,6 +120,16 @@ function remove(arr, item) {
 ```
 
 
+
+总的来说就是通过 Object.defineProperty 监听对象的每一个属性，当读取数据时会触发 getter，修改数据时会触发 setter。
+
+然后我们在 getter 中进行依赖收集，当 setter 被触发的时候，就去把在 getter 中收集到的依赖拿出来进行相关操作，通常是执行一个回调函数。
+
+我们收集依赖需要进行存储，对此 Vue2 中设置了一个 Dep 类，相当于一个管家，负责添加或删除相关的依赖和通知相关的依赖进行相关操作。
+
+在 Vue2 中所谓的依赖就是 Watcher。值得注意的是，只有 Watcher 触发的 getter 才会进行依赖收集，哪个 Watcher 触发了 getter，就把哪个 Watcher 收集到 Dep 中。当响应式数据发生改变的时候，就会把收集到的 Watcher 都进行通知。
+
+由于 Object.defineProperty 无法监听对象的变化，所以 Vue2 中设置了一个 Observer 类来管理对象的响应式依赖，同时也会递归侦测对象中子数据的变化。
 
 ### 问题2：为什么 Vue2 新增响应式属性要通过额外的 API？
 
