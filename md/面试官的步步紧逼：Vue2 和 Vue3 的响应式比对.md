@@ -360,38 +360,82 @@ const obj = new Proxy(data, {
 const targetMap = new WeakMap()
 // 在 getter 拦截器内追踪依赖的变化
 function track(target, key) {
+    // 没有 activeEffect，直接返回
     if(!activeEffect) return
+    // 根据 target 从全局变量 targetMap 中获取 depsMap
     let depsMap = targetMap.get(target)
     if(!depsMap) {
+       // 如果 depsMap 不存，那么需要新建一个 Map 并且与 target 关联
        depsMap = new Map()
        targetMap.set(target, depsMap)
     }
-    
+    // 再根据 key 从 depsMap 中取得 deps, deps 里面存储的是所有与当前 key 相关联的副作用函数
     let deps = depsMap.get(key)
     if(!deps) {
+       // 如果 deps 不存在，那么需要新建一个 Set 并且与 key 关联
        deps = new Set()
        depsMap.set(key, deps)
     }
+    // 将当前的活动的副作用函数保存起来
     deps.add(activeEffect)
 }
 // 在 setter 拦截器中触发相关依赖
 function trgger(target, key) {
+    // 根据 target 从全局变量 targetMap 中取出 depsMap
     const depsMap = targetMap.get(target)
     if(!depsMap) return
+    // 根据 key 取出相关联的所有副作用函数
     const effects = depsMap.get(key)
+    // 执行所有的副作用函数
     effects && effects.forEach(fn => fn())
 }
 ```
 
-- 初始化时需要遍历对象所有 key，如果对象层次较深，性能不好
 
+
+上述方法只实现了对引用类型的响应式处理，因为 Proxy 的代理目标必须是非原始值。原始值指的是 Boolean、Number、BigInt、String、Symbol、undefined 和 null 等类型的值。在 JavaScript 中，原始值是按值传递的，而非按引用传递。这意味着，如果一个函数接收原始值作为参数，那么形参与实参之间没有引用关系，它们是两个完全独立的值，对形参的修改不会影响实参。
+
+Vue3 中是通过对原始值做了一层包裹的方式来实现对原始值变成响应式数据的。最新的 Vue3 实现方式是通过属性访问器 getter/setter 来实现的。
+
+```javascript
+class RefImpl{
+    private _value
+    public dep
+    // 表示这是一个 Ref 类型的响应式数据
+    private _v_isRef = true
+    constructor(value) {
+        this._value = value
+        // 依赖存储
+        this.dep = new Set()
+    }
+	// getter 访问拦截
+    get value() {
+        // 依赖收集
+        trackRefValue(this)
+        return this._value
+    }
+	// setter 设置拦截
+    set value(newVal) {
+        this._value = newVal
+        // 触发依赖
+        triggerEffect(this.dep)   
+    }
+}
+```
+
+ref 本质上是一个实例化之后的 “包裹对象”，因为 Proxy 无法提供对原始值的代理，所以我们需要使用一层对象作为包裹，间接实现原始值的响应式方案。 由于实例化之后的 “包裹对象” 本质与普通对象没有任何区别，所以为了区分 ref 与 Proxy 响应式对象，我们需要给 ref 的实例对象定义一个 _v_isRef 的标识，表明这是一个 ref 的响应式对象。
+
+
+
+我们知道 Vue2 的响应式存在很多的问题，例如：
+
+- 初始化时需要遍历对象所有 key，如果对象层次较深，性能不好
 - 通知更新过程需要维护大量 dep 实例和 watcher 实例，额外占用内存较多
 - 无法监听到数组元素的变化，只能通过劫持重写了几个数组方法
 - 动态新增，删除对象属性无法拦截，只能用特定 set/delete API 代替
 - 不支持 Map、Set 等数据结构
 
-
-上述方法只实现了对引用类型的响应式处理，Vue3 中还实现了对基础类型的响应式处理
+而 Vue3 使用 Proxy 实现之后，则以上的问题都不存在了。
 
 ### 问题6：Vue3 中是怎么监测数组的变化？
 
