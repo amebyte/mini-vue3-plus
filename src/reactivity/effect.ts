@@ -10,6 +10,7 @@ export class ReactiveEffect{
     deps = [] // 所有依赖这个 effect 的响应式对象
     active = true // 是否为激活状态
     onStop?: () => void
+    // public scheduler? 显式声明类可选属性
     constructor(fn, public scheduler?) {
         this._fn = fn
     }
