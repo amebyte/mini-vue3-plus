@@ -11,6 +11,10 @@ function traverseNode(node: any, context) {
         const transform = nodeTransforms[i]
         transform(node)
     }
+    traverseChildren(node, context)
+}
+
+function traverseChildren(node: any, context: any) {
     const children = node.children
     
     if(children) {
