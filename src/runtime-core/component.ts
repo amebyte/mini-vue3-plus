@@ -75,11 +75,12 @@ function handleSetupResult(instance, setupResult: any) {
 
 function finishComponentSetup(instance: any) {
     const Component = instance.type
-    // const { proxy } = instance
-    // if(!Component.render) {
-        instance.render = Component.render
-        // console.log('instance.render', instance.render)
-    // }
+    if(compiler && !Component.render) {
+        if(Component.template) {
+            Component.render = compiler(Component.template)
+        }
+    }
+    instance.render = Component.render
 }
 
 export function getCurrentInstance() {
@@ -92,4 +93,10 @@ export function setCurrentInstance(instance) {
 
 export function unsetCurrentInstance() {
     currentInstance = null
+}
+
+let compiler
+
+export function registerRuntimeCompiler(_compiler) {
+    compiler = _compiler
 }
