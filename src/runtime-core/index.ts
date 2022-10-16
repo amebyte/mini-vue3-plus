@@ -6,5 +6,6 @@ export { provide, inject } from './apiInject'
 export { createRenderer } from './renderer'
 export { nextTick } from './scheduler'
 export { toDisplayString } from '../shared'
+export * from "../reactivity"
 export * from './apiLifecycle'
 export * from './apiWatch2'
