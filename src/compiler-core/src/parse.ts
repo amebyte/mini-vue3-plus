@@ -83,7 +83,7 @@ function parseElement(context: any, ancestors) {
 }
 
 function startsWithEndTagOpen(source, tag) {
-    return source.startsWith('</') && source.slice(2, 2 + tag.length).toLowerCase() === tag
+    return source.startsWith('</') && source.slice(2, 2 + tag.length).toLowerCase() === tag.toLowerCase()
 }
 
 function parseTag(context, type: TagType) {
