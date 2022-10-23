@@ -113,8 +113,12 @@ function parseAttributes(context) {
         const name = match[0]
         // 消费属性名称
         advanceBy(context, name.length)
+        // 消费属性名称与等于号之间的空白字符
+        advanceSpaces(context)
         // 消费等于号
         advanceBy(context, 1)
+        // 消费等于号与属性值之间的空白字符
+        advanceSpaces(context)
         // 属性值
         let value = ''
         // 获取当前模板内容的第一个字符
@@ -145,6 +149,8 @@ function parseAttributes(context) {
             // 消费属性值
             advanceBy(context, value.length)
         }
+        // 消费属性值后面空白字符
+        advanceSpaces(context)
         // 使用属性名称 + 属性值创建一个属性节点，添加到 props 数组中
         props.push({
             type: 'Atrribute',
@@ -176,6 +182,15 @@ function parseInterpolation(context) {
 
 function advanceBy(context: any, length: number) {
     context.source = context.source.slice(length)
+}
+
+function advanceSpaces(context: any) {
+    // 匹配空白字符
+    const match = /^[\t\r\n\f ]+/.exec(context.source)
+    if(match) {
+        // 调用 advanceBy 函数消费空白字符
+        advanceBy(context, match[0].length)
+    }
 }
 
 function createRoot(children) {
