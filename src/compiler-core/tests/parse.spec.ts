@@ -57,10 +57,15 @@ describe('Parse', () => {
         })
     })
 
-    test("Nested element", () => {
+    test.only("Nested element", () => {
         const ast = baseParse("<div id='kasong'><p>卡颂读书会</p>{{message}}</div>")
         expect(ast.children[0]).toStrictEqual({
             type: NodeTypes.ELEMENT,
+            props: {
+                type: NodeTypes.ATTRIBUTE,
+                name: 'id',
+                value: 'kasong'
+            },
             tag: "div",
             children: [
                 {

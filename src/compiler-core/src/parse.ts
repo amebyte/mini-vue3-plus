@@ -94,10 +94,12 @@ function parseTag(context, type: TagType) {
     const tag = match[1]
     // 删除处理完的代码
     advanceBy(context, match[0].length)
-    advanceBy(context, 1)
 
     // 解析属性
     const props = parseAttributes(context)
+
+    advanceBy(context, 1)
+
 
 
     if(type === TagType.End) {
