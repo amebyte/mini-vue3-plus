@@ -97,7 +97,7 @@ function parseTag(context, type: TagType) {
     advanceBy(context, 1)
 
     // 解析属性
-    // const props = parseAttributes(context)
+    const props = parseAttributes(context)
 
 
     if(type === TagType.End) {
@@ -106,6 +106,7 @@ function parseTag(context, type: TagType) {
 
     return {
         type: NodeTypes.ELEMENT,
+        props,
         tag
     }
 }
@@ -130,7 +131,7 @@ function parseAttributes(context) {
         // 获取当前模板内容的第一个字符
         const quote = context.source[0]
         // 判断属性值是否被引号引用
-        const isQuoted = quote === '"' && quote === "'"
+        const isQuoted = quote === '"' || quote === "'"
         if(isQuoted) {
            // 属性值被引用号引用，消费引号
            advanceBy(context, 1)
