@@ -21,6 +21,8 @@ function parseChildren(context, ancestors) {
             if(/[a-z]/i.test(s[1])) {
                 node = parseElement(context, ancestors)
             }
+
+            // 注释
         }
 
         if(!node) {
@@ -94,6 +96,10 @@ function parseTag(context, type: TagType) {
     advanceBy(context, match[0].length)
     advanceBy(context, 1)
 
+    // 解析属性
+    // const props = parseAttributes(context)
+
+
     if(type === TagType.End) {
         return
     }
@@ -153,7 +159,7 @@ function parseAttributes(context) {
         advanceSpaces(context)
         // 使用属性名称 + 属性值创建一个属性节点，添加到 props 数组中
         props.push({
-            type: 'Atrribute',
+            type: NodeTypes.ATTRIBUTE,
             name,
             value
         })

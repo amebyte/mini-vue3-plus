@@ -6,7 +6,8 @@ export const enum NodeTypes {
     ELEMENT, // 元素
     TEXT, // 文本
     ROOT, // 根节点
-    COMPOUND_EXPRESSION // 复合
+    COMPOUND_EXPRESSION, // 复合
+    ATTRIBUTE // 属性
 }
 
 export function createVNodeCall(context, tag, props, children) {
