@@ -19,7 +19,7 @@ function parseChildren(context, ancestors) {
             node = parseInterpolation(context)
         } else if(s[0] === '<') {
             if(/[a-z]/i.test(s[1])) {
-            node = parseElement(context, ancestors)
+                node = parseElement(context, ancestors)
             }
         }
 
@@ -102,6 +102,57 @@ function parseTag(context, type: TagType) {
         type: NodeTypes.ELEMENT,
         tag
     }
+}
+
+function parseAttributes(context) {
+    const props: any = []
+    while(!context.source.startsWith('>') && !context.source.startsWith('/>')) {
+        // 该正则用于匹配属性名称
+        const match: any = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)
+        // 得到属性名称
+        const name = match[0]
+        // 消费属性名称
+        advanceBy(context, name.length)
+        // 消费等于号
+        advanceBy(context, 1)
+        // 属性值
+        let value = ''
+        // 获取当前模板内容的第一个字符
+        const quote = context.source[0]
+        // 判断属性值是否被引号引用
+        const isQuoted = quote === '"' && quote === "'"
+        if(isQuoted) {
+           // 属性值被引用号引用，消费引号
+           advanceBy(context, 1)
+           // 获取下一个引号的索引
+           const endQuoteIndex = context.source.indexOf(quote)
+           if(endQuoteIndex > -1) {
+                // 获取下一个引号之前的内容作为属性值
+                value = context.source.slice(0, endQuoteIndex)
+                // 消费属性值
+                advanceBy(context, value.length)
+                // 消费引号
+                advanceBy(context, 1)
+           } else {
+                // 缺少引号
+                throw new Error(`缺少引号`)
+           }
+        } else {
+            // 代码运行到这里，说明属性值没有被引号引用
+            // 下一个空白字符之前的内容全部作为属性值
+            const match: any = /^[^\t\r\n\f >]+/.exec(context.source)
+            value = match[0]
+            // 消费属性值
+            advanceBy(context, value.length)
+        }
+        // 使用属性名称 + 属性值创建一个属性节点，添加到 props 数组中
+        props.push({
+            type: 'Atrribute',
+            name,
+            value
+        })
+    }
+    return props
 }
 
 function parseInterpolation(context) {
