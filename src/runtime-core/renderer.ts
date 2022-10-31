@@ -293,7 +293,9 @@ export function createRenderer(options) {
       let s2 = i
       // 剩下需要比对的长度
       let toBePatched = e2 - s2 + 1
+      // 当前处理的数量
       let patched = 0
+      // 剩下新数组的 key - 索引 映射表
       const keyToNewIndexMap = new Map()
       const newIndexToOldIndexMap = new Array(toBePatched)
       let moved = false
