@@ -1,10 +1,11 @@
 import { effect } from '../reactivity/effect'
-import { invokeArrayFns, isObject } from '../shared'
+import { EMPTY_OBJ, invokeArrayFns, isObject } from '../shared'
 import { ShapeFlags } from '../shared/ShapeFlags'
 import { createComponentInstance, setupComponent } from './component'
 import { renderComponentRoot } from './componentRenderUtils'
 import { shouldUpdateComponent } from './componentUpdateUtils'
 import { createAppAPI } from './createApp'
+import { invokeDirectiveHook } from './directives'
 import { setRef } from './rendererTemplateRef'
 import { queueJobs, queuePostFlushCb } from './scheduler'
 import { Fragment, Text } from './vnode'
@@ -194,7 +195,10 @@ export function createRenderer(options) {
   }
 
   function patchElement(n1, n2, container, parentComponent, anchor) {
-    console.log('patchElement')
+    const { dirs } = n2
+    if (dirs) {
+      invokeDirectiveHook(n2, n1, parentComponent, 'beforeUpdate')
+    }
     const oldProps = n1.props || {}
     const newProps = n2.props || {}
     // 需要把 el 挂载到新的 vnode
@@ -203,6 +207,12 @@ export function createRenderer(options) {
     patchChildren(n1, n2, el, parentComponent, anchor)
     // 对比 props
     patchProps(el, oldProps, newProps)
+
+    if (dirs) {
+      queuePostFlushCb(() => {
+        dirs && invokeDirectiveHook(n2, n1, parentComponent, 'updated')
+      })
+    }
   }
 
   function patchChildren(n1, n2, container, parentComponent, anchor) {
@@ -426,7 +436,7 @@ export function createRenderer(options) {
           hostPatchProp(el, key, prevProp, nextProp)
         }
       }
-      if (oldProps !== {}) {
+      if (oldProps !== EMPTY_OBJ) {
         for (const key in oldProps) {
           if (!(key in newProps)) {
             // 2. oldProps 有，而 newProps 没有了
@@ -442,19 +452,32 @@ export function createRenderer(options) {
 
   function mountElement(vnode: any, container: any, parentComponent, anchor) {
     const el = (vnode.el = hostCreateElement(vnode.type))
-    const { children, shapeFlag } = vnode
+    const { props, children, shapeFlag, dirs } = vnode
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
       el.textContent = children
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       mountChildren(vnode.children, el, parentComponent, anchor)
     }
-    const { props } = vnode
-    for (const key in props) {
-      const val = props[key]
-      hostPatchProp(el, key, null, val)
+    if (dirs) {
+      invokeDirectiveHook(vnode, null, parentComponent, 'created')
+    }
+    if (props) {
+      for (const key in props) {
+        const val = props[key]
+        hostPatchProp(el, key, null, val)
+      }
+    }
+    if (dirs) {
+      invokeDirectiveHook(vnode, null, parentComponent, 'beforeMount')
     }
     // container.append(el)
     hostInsert(el, container, anchor)
+    
+    if (dirs) {
+      queuePostFlushCb(() => {
+        dirs && invokeDirectiveHook(vnode, null, parentComponent, 'mounted')
+      })
+    }
   }
 
   function mountChildren(children, container, parentComponent, anchor) {
