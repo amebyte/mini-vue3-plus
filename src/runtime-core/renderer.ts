@@ -190,12 +190,13 @@ export function createRenderer(options) {
     if (!n1) {
       mountElement(n2, container, parentComponent, anchor)
     } else {
-      patchElement(n1, n2, container, parentComponent, anchor)
+      patchElement(n1, n2, parentComponent, anchor)
     }
   }
 
-  function patchElement(n1, n2, container, parentComponent, anchor) {
+  function patchElement(n1, n2, parentComponent, anchor) {
     const { dirs } = n2
+    // 执行指令 beforeUpdate 钩子函数
     if (dirs) {
       invokeDirectiveHook(n2, n1, parentComponent, 'beforeUpdate')
     }
@@ -210,6 +211,7 @@ export function createRenderer(options) {
 
     if (dirs) {
       queuePostFlushCb(() => {
+        // 执行指令 updated 钩子函数
         dirs && invokeDirectiveHook(n2, n1, parentComponent, 'updated')
       })
     }

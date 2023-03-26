@@ -25,6 +25,8 @@ export const toHandlerKey = (str: string) => {
     return str ? 'on' + capitalize(str) : ''
 }
 
+export const isArray = Array.isArray
+
 export const isFunction = (val: unknown): val is Function =>
   typeof val === 'function'
 export const isString = (val: unknown): val is string => typeof val === 'string'
@@ -41,3 +43,8 @@ export const toTypeString = (value: unknown): string =>
   
 export const isPlainObject = (val: unknown): val is object =>
   toTypeString(val) === '[object Object]'
+
+export const toNumber = (val: any): any => {
+  const n = parseFloat(val)
+  return isNaN(n) ? val : n
+}
