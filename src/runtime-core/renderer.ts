@@ -451,16 +451,21 @@ export function createRenderer(options) {
   }
 
   function mountElement(vnode: any, container: any, parentComponent, anchor) {
+    // 创建 DOM 元素节点
     const el = (vnode.el = hostCreateElement(vnode.type))
     const { props, children, shapeFlag, dirs } = vnode
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      // 处理子节点是纯文本的情况
       el.textContent = children
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+      // 处理子节点是数组的情况
       mountChildren(vnode.children, el, parentComponent, anchor)
     }
     if (dirs) {
+      // 执行指令的 created 生命周期的函数
       invokeDirectiveHook(vnode, null, parentComponent, 'created')
     }
+    // 处理 props，比如 class、style、event 等属性
     if (props) {
       for (const key in props) {
         const val = props[key]
@@ -468,13 +473,16 @@ export function createRenderer(options) {
       }
     }
     if (dirs) {
+      // 执行指令的 beforeMount 生命周期的函数
       invokeDirectiveHook(vnode, null, parentComponent, 'beforeMount')
     }
     // container.append(el)
+    // 把创建的 DOM 元素挂载到对应的根节点 container 上
     hostInsert(el, container, anchor)
     
     if (dirs) {
       queuePostFlushCb(() => {
+        // 执行指令的 mounted 生命周期的函数
         dirs && invokeDirectiveHook(vnode, null, parentComponent, 'mounted')
       })
     }
