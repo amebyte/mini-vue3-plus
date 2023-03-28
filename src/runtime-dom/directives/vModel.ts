@@ -58,7 +58,7 @@ export const vModelText = {
             })
         }
         if (!lazy) {
-            // 利用 compositionstart 和 compositionend 控制中文输入的开始和结束动作
+            // 利用 compositionstart 和 compositionend 监听控制中文输入的开始和结束动作
             addEventListener(el, 'compositionstart', onCompositionStart)
             addEventListener(el, 'compositionend', onCompositionEnd)
             addEventListener(el, 'change', onCompositionEnd)
