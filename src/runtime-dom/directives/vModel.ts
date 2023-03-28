@@ -74,7 +74,7 @@ export const vModelText = {
         if ((el as any).composing) return
         // 通过 document.activeElement 可以获取哪个元素获取到了焦点
         // focus() 方法可以使某个元素获取焦点
-        // 如果当前节点是正在被操作也就是获得了焦点就进行相关操作
+        // 如果当前节点是正在被操作也就是获得了焦点就进行相关操作，主要是如果新旧值如果一样则不进行更新操作以节省性能开销
         if (document.activeElement === el) {
             if (trim && el.value.trim() === value) {
                 return
