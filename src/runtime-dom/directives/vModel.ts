@@ -3,6 +3,7 @@ import { invokeArrayFns, isArray, toNumber } from "../../shared"
 
 const getModelAssigner = (vnode) => {
     const fn = vnode.props!['onUpdate:modelValue']
+    // 有可能存在多个更新函数，如果是多个更新函数则则封装一个高级函数进行调用处理
     return isArray(fn) ? value => invokeArrayFns(fn, value) : fn
 }
 
@@ -26,14 +27,20 @@ function trigger(el: HTMLElement, type: string) {
 
 export const vModelText = {
     created(el, { modifiers: { lazy, trim, number } }, vnode) {
+        // 获取当前节点 props 中的 onUpdate:modelValue 更新函数
         el._assign = getModelAssigner(vnode)
+        // 判断是否数字
         const castToNumber = number || el.type === 'number'
+        // 监听当前节点，如果存在 lazy 修饰符则监听 change 事件否则就监听 input 事件。
         addEventListener(el, lazy ? 'change' : 'input', e => {
+            // 如果存在 e.target.composing 存在则返回
             if ((e.target as any).composing) return
             let domValue = el.value
             if (trim) {
+                // 如果存在 trim 修饰符则执行 trim() 方法
                 domValue = domValue.trim()
             } else if (castToNumber) {
+                // 
                 domValue = toNumber(domValue)
             }
             el._assign(domValue)
