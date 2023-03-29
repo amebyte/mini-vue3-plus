@@ -72,6 +72,7 @@ export const vModelText = {
     beforeUpdate(el, { value, modifiers: { trim, number } }, vnode) {
         // 获取当前节点 props 中的 onUpdate:modelValue 更新函数
         el._assign = getModelAssigner(vnode)
+        // 如果处于中文输入法的控制状态则不进行更新
         if ((el as any).composing) return
         // 通过 document.activeElement 可以获取哪个元素获取到了焦点
         // focus() 方法可以使某个元素获取焦点
