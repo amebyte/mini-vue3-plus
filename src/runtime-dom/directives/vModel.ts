@@ -96,6 +96,7 @@ export const vModelText = {
 
 export const vModelCheckbox = {
     created(el, _, vnode) {
+      // 获取当前节点 props 中的 onUpdate:modelValue 更新函数
       el._assign = getModelAssigner(vnode)
       addEventListener(el, 'change', () => {
         const modelValue = (el as any)._modelValue
@@ -128,6 +129,7 @@ export const vModelCheckbox = {
     // set initial checked on mount to wait for true-value/false-value
     mounted: setChecked,
     beforeUpdate(el, binding, vnode) {
+      // 获取当前节点 props 中的 onUpdate:modelValue 更新函数
       el._assign = getModelAssigner(vnode)
       setChecked(el, binding, vnode)
     }
