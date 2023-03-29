@@ -135,15 +135,22 @@ export const vModelCheckbox = {
 
 export const vModelRadio = {
     created(el, { value }, vnode) {
+      // 给真实 DOM 的 checked 属性赋值
       el.checked = looseEqual(value, vnode.props!.value)
+      // 获取当前节点 props 中的 onUpdate:modelValue 更新函数
       el._assign = getModelAssigner(vnode)
+      // 单项选择只需要监听 change 事件
       addEventListener(el, 'change', () => {
+        // 更新状态值，也就是用户操作 DOM 后是通过此来反向影响状态值的变化
         el._assign(getValue(el))
       })
     },
     beforeUpdate(el, { value, oldValue }, vnode) {
+      // 获取当前节点 props 中的 onUpdate:modelValue 更新函数
       el._assign = getModelAssigner(vnode)
+      // 新老值是否相等
       if (value !== oldValue) {
+        // 将状态值更新到真实 DOM 中
         el.checked = looseEqual(value, vnode.props!.value)
       }
     }
