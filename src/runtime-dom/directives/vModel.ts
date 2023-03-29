@@ -86,6 +86,7 @@ export const vModelText = {
             }
         }
         const newValue = value == null ? '' : value
+            // 判断新老值是否相同
             if (el.value !== newValue) {
                 // 将状态值更新到真实 DOM 中
                 el.value = newValue
