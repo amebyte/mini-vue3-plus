@@ -230,11 +230,11 @@ function setChecked(el, { value, oldValue }, vnode) {
   // 把 v-model 的状态变量设置到 el._modelValue 上，相当于是一个全局变量
   ;(el as any)._modelValue = value
   if (isArray(value)) {
-      el.checked = looseIndexOf(value, vnode.props!.value) > -1
+    el.checked = looseIndexOf(value, vnode.props!.value) > -1
   } else if (isSet(value)) {
-      el.checked = value.has(vnode.props!.value)
+    el.checked = value.has(vnode.props!.value)
   } else if (value !== oldValue) {
-      el.checked = looseEqual(value, getCheckboxValue(el, true))
+    el.checked = looseEqual(value, getCheckboxValue(el, true))
   }
 }
 
