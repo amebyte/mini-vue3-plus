@@ -172,30 +172,35 @@ export const vModelRadio = {
   
 export const vModelSelect = {
   created(el, { value, modifiers: { number } }, vnode) {
+    // 判断 v-model 绑定的状态数据是否 Set 类型
     const isSetModel = isSet(value)
     addEventListener(el, 'change', () => {
+      // 通过 Array.prototype.filter.call 方法筛选选中的选项数据，返回值是数组
       const selectedVal = Array.prototype.filter
         .call(el.options, (o: HTMLOptionElement) => o.selected)
         .map(
           (o: HTMLOptionElement) =>
+            // 如果存在 number 修饰器则对返回值进行数字化处理
             number ? toNumber(getValue(o)) : getValue(o)
         )
+      // 更新 v-model 绑定的状态数据
       el._assign(
         el.multiple
           ? isSetModel
-            ? new Set(selectedVal)
+            ? new Set(selectedVal) // 如果是 Set 类型则返回 Set 类型数据
             : selectedVal
           : selectedVal[0]
       )
     })
+    // 获取当前节点 props 中的 onUpdate:modelValue 更新函数
     el._assign = getModelAssigner(vnode)
   },
-  // set value in mounted & updated because <select> relies on its children
-  // <option>s.
+  // 设置 value 值需要在 mounted 方法和 updated 方法中，因为需要等待子元素 option 也渲染完毕
   mounted(el, { value }) {
     setSelected(el, value)
   },
   beforeUpdate(el, _binding, vnode) {
+    // 更新当前节点 props 中的 onUpdate:modelValue 更新函数
     el._assign = getModelAssigner(vnode)
   },
   updated(el, { value }) {
@@ -207,21 +212,26 @@ function setSelected(el: HTMLSelectElement, value: any) {
   const isMultiple = el.multiple
   for (let i = 0, l = el.options.length; i < l; i++) {
     const option = el.options[i]
+    // 通过 getValue 函数获取 value 值，因为 select 的 option 选项的 value 也会被设置为 _value
     const optionValue = getValue(option)
     if (isMultiple) {
       if (isArray(value)) {
+        // 数组的情况处理
         option.selected = looseIndexOf(value, optionValue) > -1
       } else {
+        // Set 类型的处理
         option.selected = value.has(optionValue)
       }
     } else {
       if (looseEqual(getValue(option), value)) {
+        // 
         el.selectedIndex = i
         return
       }
     }
   }
   if (!isMultiple) {
+    // selectedIndex 为 -1 则没有选项被选中
     el.selectedIndex = -1
   }
 }
