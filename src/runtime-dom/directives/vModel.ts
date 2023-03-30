@@ -99,38 +99,50 @@ export const vModelCheckbox = {
       // 获取当前节点 props 中的 onUpdate:modelValue 更新函数
       el._assign = getModelAssigner(vnode)
       addEventListener(el, 'change', () => {
+        // _modelValue 就是 v-model 绑定的状态数据
         const modelValue = (el as any)._modelValue
+        // 获取 DOM 实例上 value 值
         const elementValue = getValue(el)
+        // 选中状态
         const checked = el.checked
         const assign = el._assign
+        // 处理 modelValue 是数组的情况
         if (isArray(modelValue)) {
+          // 获取当前选项在 modelValue 数组中的位置
           const index = looseIndexOf(modelValue, elementValue)
           const found = index !== -1
           if (checked && !found) {
+            // 如果是选中状态且 modelValue 里不存在当前 DOM 实例上 value 值，就往 modelValue 上添加，并且更新状态数据
             assign(modelValue.concat(elementValue))
           } else if (!checked && found) {
+            // 如果是不是选中状态，又在 modelValue 中找到当前选项的值，则需要把当前选项的值从 modelValue 中删除，并且更新状态数据
             const filtered = [...modelValue]
             filtered.splice(index, 1)
             assign(filtered)
           }
         } else if (isSet(modelValue)) {
+          // 如果是 Set 的数据类型的处理方案
           const cloned = new Set(modelValue)
           if (checked) {
+            // 如果是选中状态则添加
             cloned.add(elementValue)
           } else {
+            // 如果是未选中状态则删除
             cloned.delete(elementValue)
           }
           assign(cloned)
         } else {
+          // 不是多个复选项的情况，处理的过程就跟单项选择框 Radio 一样。
           assign(getCheckboxValue(el, checked))
         }
       })
     },
-    // set initial checked on mount to wait for true-value/false-value
+    // 这里需要在 mounted 生命周期里初始化是因为需要等 true-value/false-value 的 props 设置完毕
     mounted: setChecked,
     beforeUpdate(el, binding, vnode) {
       // 获取当前节点 props 中的 onUpdate:modelValue 更新函数
       el._assign = getModelAssigner(vnode)
+      // 更新过程跟初始化过程一样
       setChecked(el, binding, vnode)
     }
 }
@@ -156,73 +168,74 @@ export const vModelRadio = {
         el.checked = looseEqual(value, vnode.props!.value)
       }
     }
-  }
+}
   
-  export const vModelSelect = {
-    created(el, { value, modifiers: { number } }, vnode) {
-      const isSetModel = isSet(value)
-      addEventListener(el, 'change', () => {
-        const selectedVal = Array.prototype.filter
-          .call(el.options, (o: HTMLOptionElement) => o.selected)
-          .map(
-            (o: HTMLOptionElement) =>
-              number ? toNumber(getValue(o)) : getValue(o)
-          )
-        el._assign(
-          el.multiple
-            ? isSetModel
-              ? new Set(selectedVal)
-              : selectedVal
-            : selectedVal[0]
+export const vModelSelect = {
+  created(el, { value, modifiers: { number } }, vnode) {
+    const isSetModel = isSet(value)
+    addEventListener(el, 'change', () => {
+      const selectedVal = Array.prototype.filter
+        .call(el.options, (o: HTMLOptionElement) => o.selected)
+        .map(
+          (o: HTMLOptionElement) =>
+            number ? toNumber(getValue(o)) : getValue(o)
         )
-      })
-      el._assign = getModelAssigner(vnode)
-    },
-    // set value in mounted & updated because <select> relies on its children
-    // <option>s.
-    mounted(el, { value }) {
-      setSelected(el, value)
-    },
-    beforeUpdate(el, _binding, vnode) {
-      el._assign = getModelAssigner(vnode)
-    },
-    updated(el, { value }) {
-      setSelected(el, value)
-    }
+      el._assign(
+        el.multiple
+          ? isSetModel
+            ? new Set(selectedVal)
+            : selectedVal
+          : selectedVal[0]
+      )
+    })
+    el._assign = getModelAssigner(vnode)
+  },
+  // set value in mounted & updated because <select> relies on its children
+  // <option>s.
+  mounted(el, { value }) {
+    setSelected(el, value)
+  },
+  beforeUpdate(el, _binding, vnode) {
+    el._assign = getModelAssigner(vnode)
+  },
+  updated(el, { value }) {
+    setSelected(el, value)
   }
+}
 
-  function setSelected(el: HTMLSelectElement, value: any) {
-    const isMultiple = el.multiple
-    for (let i = 0, l = el.options.length; i < l; i++) {
-      const option = el.options[i]
-      const optionValue = getValue(option)
-      if (isMultiple) {
-        if (isArray(value)) {
-          option.selected = looseIndexOf(value, optionValue) > -1
-        } else {
-          option.selected = value.has(optionValue)
-        }
+function setSelected(el: HTMLSelectElement, value: any) {
+  const isMultiple = el.multiple
+  for (let i = 0, l = el.options.length; i < l; i++) {
+    const option = el.options[i]
+    const optionValue = getValue(option)
+    if (isMultiple) {
+      if (isArray(value)) {
+        option.selected = looseIndexOf(value, optionValue) > -1
       } else {
-        if (looseEqual(getValue(option), value)) {
-          el.selectedIndex = i
-          return
-        }
+        option.selected = value.has(optionValue)
+      }
+    } else {
+      if (looseEqual(getValue(option), value)) {
+        el.selectedIndex = i
+        return
       }
     }
-    if (!isMultiple) {
-      el.selectedIndex = -1
-    }
   }
+  if (!isMultiple) {
+    el.selectedIndex = -1
+  }
+}
   
 function setChecked(el, { value, oldValue }, vnode) {
-    ;(el as any)._modelValue = value
-    if (isArray(value)) {
-        el.checked = looseIndexOf(value, vnode.props!.value) > -1
-    } else if (isSet(value)) {
-        el.checked = value.has(vnode.props!.value)
-    } else if (value !== oldValue) {
-        el.checked = looseEqual(value, getCheckboxValue(el, true))
-    }
+  // 把 v-model 的状态变量设置到 el._modelValue 上，相当于是一个全局变量
+  ;(el as any)._modelValue = value
+  if (isArray(value)) {
+      el.checked = looseIndexOf(value, vnode.props!.value) > -1
+  } else if (isSet(value)) {
+      el.checked = value.has(vnode.props!.value)
+  } else if (value !== oldValue) {
+      el.checked = looseEqual(value, getCheckboxValue(el, true))
+  }
 }
 
 // retrieve raw value set via :value bindings
@@ -230,8 +243,7 @@ function getValue(el) {
     return '_value' in el ? (el as any)._value : el.value
 }
   
-// retrieve raw value for true-value and false-value set via :true-value or :false-value bindings
-function getCheckboxValue(el: HTMLInputElement & { _trueValue?: any; _falseValue?: any }, checked: boolean) {
+function getCheckboxValue(el, checked) {
     const key = checked ? '_trueValue' : '_falseValue'
     return key in el ? el[key] : checked
 }
