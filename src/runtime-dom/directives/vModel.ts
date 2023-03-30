@@ -214,7 +214,7 @@ function setSelected(el: HTMLSelectElement, value: any) {
     const option = el.options[i]
     // 通过 getValue 函数获取 value 值，因为 select 的 option 选项的 value 也会被设置为 _value
     const optionValue = getValue(option)
-    if (isMultiple) {
+    if (isMultiple) { // 多选的情况
       if (isArray(value)) {
         // 数组的情况处理
         option.selected = looseIndexOf(value, optionValue) > -1
@@ -222,7 +222,7 @@ function setSelected(el: HTMLSelectElement, value: any) {
         // Set 类型的处理
         option.selected = value.has(optionValue)
       }
-    } else {
+    } else { // 单选的情况
       if (looseEqual(getValue(option), value)) {
         // selectIndex 为被选中 option 元素的索引值，通过 selectIndex 可设置选中项、获取索引值、删除指定项和修改指定项文本
         el.selectedIndex = i
@@ -230,6 +230,7 @@ function setSelected(el: HTMLSelectElement, value: any) {
       }
     }
   }
+  // 单选时且没有选中任何 options 则把 select.selectedIndex 置为 -1
   if (!isMultiple) {
     // selectedIndex 为 -1 则没有选项被选中
     el.selectedIndex = -1
