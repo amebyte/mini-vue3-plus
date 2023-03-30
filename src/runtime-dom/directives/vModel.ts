@@ -230,22 +230,26 @@ function setChecked(el, { value, oldValue }, vnode) {
   // 把 v-model 的状态变量设置到 el._modelValue 上，相当于是一个全局变量
   ;(el as any)._modelValue = value
   if (isArray(value)) {
+    // 如果是数组则判断 v-model 绑定是状态数据中是否存在当前复选框中的设置的 value 值
     el.checked = looseIndexOf(value, vnode.props!.value) > -1
   } else if (isSet(value)) {
+    // 如果是 Set 数据则判断 v-model 绑定是状态数据中是否存在当前复选框中的设置的 value 值
     el.checked = value.has(vnode.props!.value)
   } else if (value !== oldValue) {
+    // 如果是单一的复选框的情况，还需要处理使用 true-value 和 false-value 自定义 checkbox 的布尔绑定值的情况
     el.checked = looseEqual(value, getCheckboxValue(el, true))
   }
 }
 
 // retrieve raw value set via :value bindings
 function getValue(el) {
-    return '_value' in el ? (el as any)._value : el.value
+  return '_value' in el ? (el as any)._value : el.value
 }
   
 function getCheckboxValue(el, checked) {
-    const key = checked ? '_trueValue' : '_falseValue'
-    return key in el ? el[key] : checked
+  const key = checked ? '_trueValue' : '_falseValue'
+  // 如果 _trueValue 或者 _falseValue 存在 el 实例中则使用 _trueValue 或 _falseValue 的值
+  return key in el ? el[key] : checked
 }
 
 
