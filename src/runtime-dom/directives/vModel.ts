@@ -224,7 +224,7 @@ function setSelected(el: HTMLSelectElement, value: any) {
       }
     } else {
       if (looseEqual(getValue(option), value)) {
-        // 
+        // selectIndex 为被选中 option 元素的索引值，通过 selectIndex 可设置选中项、获取索引值、删除指定项和修改指定项文本
         el.selectedIndex = i
         return
       }
