@@ -189,7 +189,7 @@ export const vModelSelect = {
           ? isSetModel
             ? new Set(selectedVal) // 如果是 Set 类型则返回 Set 类型数据
             : selectedVal
-          : selectedVal[0]
+          : selectedVal[0] // 因为上面经过处理返回的数据是数组
       )
     })
     // 获取当前节点 props 中的 onUpdate:modelValue 更新函数
