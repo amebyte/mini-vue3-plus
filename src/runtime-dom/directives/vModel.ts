@@ -209,6 +209,7 @@ export const vModelSelect = {
 }
 
 function setSelected(el: HTMLSelectElement, value: any) {
+  // 是否多选
   const isMultiple = el.multiple
   for (let i = 0, l = el.options.length; i < l; i++) {
     const option = el.options[i]
