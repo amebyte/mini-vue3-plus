@@ -187,8 +187,8 @@ export const vModelSelect = {
       el._assign(
         el.multiple
           ? isSetModel
-            ? new Set(selectedVal) // 如果是 Set 类型则返回 Set 类型数据
-            : selectedVal
+            ? new Set(selectedVal) // 如果多选且是 Set 类型则返回 Set 类型数据
+            : selectedVal // 如果是多选其是数组
           : selectedVal[0] // 因为上面经过处理返回的数据是数组
       )
     })
